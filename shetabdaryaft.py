@@ -54,14 +54,15 @@ DEFAULT_CONFIG = {
     "max_threads_per_download": 5,
     "use_multithreaded_download": True,
     "chunk_size": 1024 * 1024,  # 1MB
-    "theme": "vapor",
+    "theme": "aqua",  # تم اختصاصی آبی
     "language": "fa",
     "rtl": True,
     "check_for_updates": True,
     "auto_start_download": True,
     "tray_icon_enabled": True,
     "minimize_to_tray": True,
-    "show_notifications": True
+    "show_notifications": True,
+    "font_size": 14  # افزایش سایز پیش‌فرض فونت
 }
 
 # کلاس‌های سفارشی برای ذخیره‌سازی اطلاعات
@@ -703,8 +704,32 @@ class ShetabDaryaftApp:
         # بارگذاری تنظیمات
         self.config = self._load_config()
         
-        # تنظیم تم
-        self.style = Style(theme=self.config.get("theme", "vapor"))
+        # ایجاد و تنظیم تم اختصاصی Aqua
+        if self.config.get("theme") == "aqua":
+            # اگر تم انتخابی Aqua است، تم را خودمان بسازیم
+            self.style = Style(theme="flatly")  # استفاده از یک تم پایه
+            
+            # رنگ‌های اصلی تم Aqua
+            aqua_primary = "#00b8d4"       # آبی روشن
+            aqua_secondary = "#0288d1"     # آبی متوسط
+            aqua_accent = "#00e5ff"        # آبی فیروزه‌ای
+            aqua_bg = "#e0f7fa"            # آبی بسیار کم‌رنگ
+            aqua_text = "#263238"          # تیره برای متن
+            
+            # پیکربندی المان‌های رابط کاربری با تم Aqua
+            self.style.configure("TButton", background=aqua_primary, foreground=aqua_text, borderwidth=1, focusthickness=0)
+            self.style.map("TButton", background=[("active", aqua_secondary), ("pressed", aqua_secondary)])
+            
+            self.style.configure("TFrame", background=aqua_bg)
+            self.style.configure("TLabel", background=aqua_bg, foreground=aqua_text)
+            self.style.configure("TLabelframe", background=aqua_bg, foreground=aqua_text)
+            self.style.configure("TLabelframe.Label", background=aqua_bg, foreground=aqua_text)
+            
+            self.style.configure("Horizontal.TProgressbar", background=aqua_primary, troughcolor=aqua_bg)
+            self.style.configure("TEntry", fieldbackground="white", foreground=aqua_text)
+        else:
+            # استفاده از تم معمولی از ttkbootstrap
+            self.style = Style(theme=self.config.get("theme", "flatly"))
         
         # ایجاد مدیر دانلود
         self.download_manager = DownloadManager(self.config, self._update_download_ui)
@@ -730,21 +755,52 @@ class ShetabDaryaftApp:
         try:
             import tkinter.font as tkfont
             
-            # ثبت فونت‌های BYekan+
-            tkfont.families()  # برای اطمینان از بارگذاری فونت‌ها
+            # بارگذاری مستقیم فونت‌های فارسی
+            font_size = self.config.get("font_size", 14)  # سایز بزرگتر
             
-            self.font_normal = tkfont.Font(family="BYekan+", size=10)
-            self.font_bold = tkfont.Font(family="BYekan+ Bold", size=10)
-            self.font_header = tkfont.Font(family="BYekan+ Bold", size=13)
-            self.font_big = tkfont.Font(family="BYekan+ Bold", size=16)
+            # ثبت مسیر فونت‌ها در سیستم
+            if os.name == "nt":
+                from ctypes import windll
+                # اضافه کردن فونت‌ها به صورت مستقیم به سیستم
+                for font_file in ["BYekan+.ttf", "BYekan+ Bold.ttf"]:
+                    font_path = os.path.join(FONT_DIR, font_file)
+                    if os.path.exists(font_path):
+                        try:
+                            # اضافه کردن فونت به سیستم
+                            windll.gdi32.AddFontResourceW(font_path)
+                            print(f"فونت با موفقیت بارگذاری شد: {font_file}")
+                        except Exception as e:
+                            print(f"خطا در بارگذاری فونت {font_file}: {str(e)}")
             
-            # پیکربندی فونت پیش‌فرض
-            ttk.Style().configure("TButton", font=("BYekan+", 10))
-            ttk.Style().configure("TLabel", font=("BYekan+", 10))
-            ttk.Style().configure("TEntry", font=("BYekan+", 10))
-            ttk.Style().configure("TFrame", font=("BYekan+", 10))
-            ttk.Style().configure("TNotebook", font=("BYekan+", 10))
-            ttk.Style().configure("TNotebook.Tab", font=("BYekan+", 10))
+            # تنظیم فونت پیش‌فرض برای همه عناصر
+            self.root.option_add("*Font", f"BYekan+ {font_size}")
+            self.root.option_add("*Button.font", f"BYekan+ {font_size}")
+            self.root.option_add("*Label.font", f"BYekan+ {font_size}")
+            self.root.option_add("*Menu.font", f"BYekan+ {font_size}")
+            self.root.option_add("*Text.font", f"BYekan+ {font_size}")
+            
+            # ایجاد اشیاء فونت برای استفاده در برنامه
+            self.font_normal = tkfont.Font(family="BYekan+", size=font_size)
+            self.font_bold = tkfont.Font(family="BYekan+ Bold", size=font_size)
+            self.font_header = tkfont.Font(family="BYekan+ Bold", size=font_size+3)
+            self.font_big = tkfont.Font(family="BYekan+ Bold", size=font_size+6)
+            
+            # پیکربندی تمام استایل‌ها با فونت فارسی
+            self.style.configure(".", font=("BYekan+", font_size))
+            self.style.configure("TButton", font=("BYekan+", font_size))
+            self.style.configure("TLabel", font=("BYekan+", font_size))
+            self.style.configure("TEntry", font=("BYekan+", font_size))
+            self.style.configure("TFrame", font=("BYekan+", font_size))
+            self.style.configure("TNotebook", font=("BYekan+", font_size))
+            self.style.configure("TNotebook.Tab", font=("BYekan+", font_size))
+            self.style.configure("TLabelframe.Label", font=("BYekan+ Bold", font_size))
+            
+            # تنظیم دستی فونت‌های ویجت‌های عادی Tk
+            for widget in [self.root] + list(self.root.winfo_children()):
+                try:
+                    widget.configure(font=self.font_normal)
+                except:
+                    pass
             
         except Exception as e:
             print(f"خطا در ثبت فونت‌ها: {str(e)}")
@@ -773,8 +829,12 @@ class ShetabDaryaftApp:
         self.main_frame = ttk.Frame(self.root)
         self.main_frame.pack(fill="both", expand=True, padx=10, pady=10)
         
-        # ایجاد هدر با رنگ گرادیانت
-        header_img = generate_gradient_image(800, 50, (90, 20, 120, 255), (200, 100, 250, 255))
+        # ایجاد هدر با رنگ گرادیانت تم Aqua
+        if self.config.get("theme") == "aqua":
+            # رنگ گرادیانت هدر برای تم Aqua
+            header_img = generate_gradient_image(800, 50, (0, 184, 212, 255), (3, 155, 229, 255))  # آبی فیروزه‌ای به آبی
+        else:
+            header_img = generate_gradient_image(800, 50, (100, 180, 230, 255), (150, 200, 230, 255))
         self.header_img = ImageTk.PhotoImage(header_img)
         
         header_label = ttk.Label(self.main_frame, image=self.header_img)
@@ -886,8 +946,12 @@ class ShetabDaryaftApp:
         for child in details_inner_frame.winfo_children():
             child.configure(justify="right")
         
-        # فوتر
-        footer_img = generate_gradient_image(800, 30, (200, 100, 250, 255), (90, 20, 120, 255))
+        # فوتر با رنگ گرادیانت تم Aqua
+        if self.config.get("theme") == "aqua":
+            # رنگ گرادیانت فوتر برای تم Aqua
+            footer_img = generate_gradient_image(800, 30, (3, 155, 229, 255), (0, 184, 212, 255))  # آبی به آبی فیروزه‌ای
+        else:
+            footer_img = generate_gradient_image(800, 30, (150, 200, 230, 255), (100, 180, 230, 255))
         self.footer_img = ImageTk.PhotoImage(footer_img)
         
         footer_label = ttk.Label(self.main_frame, image=self.footer_img)
@@ -1452,13 +1516,23 @@ if __name__ == "__main__":
     if os.name == "nt":  # ویندوز
         import ctypes
         try:
-            # افزودن پوشه فونت به ویندوز
+            # افزودن مسیر فونت‌ها به مسیرهای جستجوی سیستم
+            font_added = False
             for font_file in os.listdir(FONT_DIR):
                 if font_file.endswith('.ttf'):
                     font_path = os.path.join(FONT_DIR, font_file)
                     if os.path.exists(font_path):
-                        # برای راحتی فونت‌ها را موقت اضافه می‌کنیم
-                        ctypes.windll.gdi32.AddFontResourceW(font_path)
+                        # بارگذاری فونت در ویندوز
+                        result = ctypes.windll.gdi32.AddFontResourceW(font_path)
+                        if result > 0:
+                            font_added = True
+                            print(f"فونت با موفقیت بارگذاری شد: {font_file}")
+                        else:
+                            print(f"خطا در بارگذاری فونت: {font_file}")
+                            
+            # اعلام تغییر فونت به سیستم
+            if font_added:
+                ctypes.windll.user32.SendMessageW(0xFFFF, 0x001D, 0, 0)  # WM_FONTCHANGE
         except Exception as e:
             print(f"خطا در بارگذاری فونت: {str(e)}")
     
@@ -1467,10 +1541,34 @@ if __name__ == "__main__":
     
     # تعیین جهت‌گیری راست به چپ
     root.tk.call('encoding', 'system', 'utf-8')
+    
+    # تنظیم چگالی و مقیاس نمایش
     try:
-        root.tk.call('tk', 'scaling', 1.0)  # تنظیم مقیاس بهتر
+        root.tk.call('tk', 'scaling', 1.5)  # تنظیم مقیاس بزرگتر
     except:
         pass
+    
+    # تنظیم راست-به-چپ بودن المان‌ها برای فارسی
+    try:
+        # تلاش برای تنظیم RTL در برخی عناصر
+        root.tk.call('tcl_setRightToLeftVal', 1)
+    except:
+        pass
+        
+    # تنظیم عنوان و آیکون برنامه
+    root.title(APP_NAME)
+    
+    # بررسی وجود تم Aqua در لیست تم‌های موجود
+    aqua_theme_exists = False
+    try:
+        themes = ttk.Style().theme_names()
+        if "aqua" not in themes:
+            print("تم Aqua به لیست تم‌ها اضافه می‌شود...")
+        else:
+            aqua_theme_exists = True
+            print("تم Aqua از قبل وجود دارد.")
+    except:
+        print("خطا در بررسی تم‌های موجود")
     
     # راه‌اندازی برنامه
     app = ShetabDaryaftApp(root)
