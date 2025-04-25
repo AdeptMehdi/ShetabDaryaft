@@ -111,7 +111,7 @@ ShetabDaryaft/
 <div dir="ltr">
 
 <p align="center">
-  <img src="assets/logo.png" alt="ShetabDaryaft Logo" width="200" />
+  <img src="./img/logo.png" alt="ShetabDaryaft Logo" width="200" />
 </p>
 
 <p align="center">
