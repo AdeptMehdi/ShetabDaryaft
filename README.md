@@ -3,7 +3,7 @@
 <div dir="rtl">
 
 <p align="center">
-  <img src="assets/logo.png" alt="لوگوی شتاب دریافت" width="200" />
+  <img src="./img/logo.png" alt="لوگوی شتاب دریافت" width="200" />
 </p>
 
 <p align="center">
