@@ -1,0 +1,15 @@
+{
+  "default_download_path": "D:/tesyt",
+  "max_concurrent_downloads": 8,
+  "max_threads_per_download": 9,
+  "use_multithreaded_download": true,
+  "chunk_size": 1048576,
+  "theme": "solar",
+  "language": "fa",
+  "rtl": true,
+  "check_for_updates": true,
+  "auto_start_download": true,
+  "tray_icon_enabled": true,
+  "minimize_to_tray": true,
+  "show_notifications": true
+}
