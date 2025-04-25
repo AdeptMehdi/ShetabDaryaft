@@ -28,12 +28,40 @@ import json
 # تنظیمات اولیه
 APP_NAME = "شتاب دریافت"
 APP_VERSION = "1.0.0"
-APP_DIR = os.path.dirname(os.path.abspath(__file__))
-ASSETS_DIR = os.path.join(APP_DIR, "assets")
-FONT_DIR = os.path.join(APP_DIR, "font")
-CONFIG_FILE = os.path.join(APP_DIR, "config.json")
-HISTORY_FILE = os.path.join(APP_DIR, "history.json")
-TEMP_DIR = os.path.join(APP_DIR, "temp")
+APP_PATH = os.path.dirname(os.path.abspath(__file__))
+ASSETS_DIR = os.path.join(APP_PATH, "assets")
+FONT_DIR = os.path.join(APP_PATH, "font")
+HISTORY_FILE = os.path.join(APP_PATH, "download_history.json")
+CONFIG_FILE = os.path.join(APP_PATH, "config.json")
+TEMP_DIR = os.path.join(APP_PATH, "temp")
+
+# فانکشن برای نمایش اطلاعات فونت‌های موجود
+def print_font_info():
+    """چاپ اطلاعات فونت‌های شناسایی شده"""
+    try:
+        import tkinter.font as tkfont
+        root = tk.Tk()
+        root.withdraw()  # پنجره مخفی می‌شود
+        
+        print("\n===== اطلاعات فونت‌های موجود =====")
+        fonts = sorted(list(tkfont.families(root)))
+        
+        # جستجوی فونت BYekan
+        yekan_fonts = [f for f in fonts if "yekan" in f.lower() or "بی یکان" in f.lower()]
+        
+        print(f"تعداد کل فونت‌ها: {len(fonts)}")
+        if yekan_fonts:
+            print(f"فونت‌های یکان یافت شده: {yekan_fonts}")
+        else:
+            print("هیچ فونت یکان یافت نشد")
+            
+        print("نمونه فونت‌ها:")
+        for f in fonts[:10]:  # نمایش 10 فونت اول
+            print(f"  - {f}")
+            
+        root.destroy()
+    except Exception as e:
+        print(f"خطا در بررسی فونت‌ها: {e}")
 
 # ساخت پوشه‌های مورد نیاز
 os.makedirs(ASSETS_DIR, exist_ok=True)
@@ -697,6 +725,11 @@ class ShetabDaryaftApp:
     
     def __init__(self, root):
         self.root = root
+        
+        # بارگذاری مستقیم فونت‌ها در ویندوز در ابتدای کار
+        self._load_fonts_directly()
+        
+        # تنظیمات اولیه پنجره
         self.root.title(APP_NAME)
         self.root.geometry("850x650")
         self.root.minsize(800, 600)
@@ -750,57 +783,129 @@ class ShetabDaryaftApp:
         # ذخیره‌سازی تنظیمات هنگام خروج
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
     
+    def _load_fonts_directly(self):
+        """بارگذاری مستقیم فونت‌های فارسی در ویندوز"""
+        if os.name != "nt":
+            return
+            
+        try:
+            import ctypes
+            
+            # فونت‌های مورد نیاز
+            font_files = ["BYekan+.ttf", "BYekan+ Bold.ttf"]
+            
+            # بارگذاری هر فونت
+            for font_file in font_files:
+                font_path = os.path.join(FONT_DIR, font_file)
+                if not os.path.exists(font_path):
+                    continue
+                    
+                # بارگذاری فونت در ویندوز
+                try:
+                    result = ctypes.windll.gdi32.AddFontResourceW(font_path)
+                    print(f"فونت '{font_file}' با نتیجه {result} بارگذاری شد")
+                except Exception as e:
+                    print(f"خطا در بارگذاری فونت {font_file}: {e}")
+            
+            # اعلام تغییر فونت به سیستم
+            ctypes.windll.user32.SendMessageW(0xFFFF, 0x001D, 0, 0)  # WM_FONTCHANGE
+            
+        except Exception as e:
+            print(f"خطا در بارگذاری مستقیم فونت: {e}")
+    
     def _register_fonts(self):
         """ثبت فونت‌های برنامه"""
         try:
             import tkinter.font as tkfont
             
-            # بارگذاری مستقیم فونت‌های فارسی
-            font_size = self.config.get("font_size", 14)  # سایز بزرگتر
+            # تعیین سایز فونت با اندازه بزرگتر
+            font_size = self.config.get("font_size", 15)  # افزایش سایز بیشتر
             
-            # ثبت مسیر فونت‌ها در سیستم
+            # فایل‌های فونت
+            font_yekan = "BYekan+.ttf"
+            font_yekan_bold = "BYekan+ Bold.ttf"
+            
+            # مسیرهای کامل فونت‌ها
+            yekan_path = os.path.join(FONT_DIR, font_yekan)
+            yekan_bold_path = os.path.join(FONT_DIR, font_yekan_bold)
+            
+            # ثبت مستقیم فونت‌ها
+            print("در حال ثبت فونت‌ها در سیستم...")
+            
+            # ثبت اجباری فونت‌ها در ویندوز
             if os.name == "nt":
-                from ctypes import windll
-                # اضافه کردن فونت‌ها به صورت مستقیم به سیستم
-                for font_file in ["BYekan+.ttf", "BYekan+ Bold.ttf"]:
-                    font_path = os.path.join(FONT_DIR, font_file)
-                    if os.path.exists(font_path):
-                        try:
-                            # اضافه کردن فونت به سیستم
-                            windll.gdi32.AddFontResourceW(font_path)
-                            print(f"فونت با موفقیت بارگذاری شد: {font_file}")
-                        except Exception as e:
-                            print(f"خطا در بارگذاری فونت {font_file}: {str(e)}")
+                try:
+                    # ثبت مستقیم فونت‌ها در ویندوز
+                    for path in [yekan_path, yekan_bold_path]:
+                        if os.path.exists(path):
+                            # ثبت فونت در سیستم
+                            result = ctypes.windll.gdi32.AddFontResourceW(path)
+                            print(f"نتیجه ثبت فونت {os.path.basename(path)}: {result}")
+                            
+                            # اطلاع‌رسانی تغییر فونت به سیستم
+                            ctypes.windll.user32.SendMessageW(0xFFFF, 0x001D, 0, 0)
+                except Exception as e:
+                    print(f"خطا در ثبت سیستمی فونت: {e}")
             
-            # تنظیم فونت پیش‌فرض برای همه عناصر
-            self.root.option_add("*Font", f"BYekan+ {font_size}")
-            self.root.option_add("*Button.font", f"BYekan+ {font_size}")
-            self.root.option_add("*Label.font", f"BYekan+ {font_size}")
-            self.root.option_add("*Menu.font", f"BYekan+ {font_size}")
-            self.root.option_add("*Text.font", f"BYekan+ {font_size}")
+            print("در حال تلاش برای یافتن فونت‌ها در سیستم...")
+            available_fonts = sorted(list(tkfont.families()))
+            print(f"فونت‌های موجود: {available_fonts[:5]}... (و {len(available_fonts)-5} مورد دیگر)")
             
-            # ایجاد اشیاء فونت برای استفاده در برنامه
-            self.font_normal = tkfont.Font(family="BYekan+", size=font_size)
-            self.font_bold = tkfont.Font(family="BYekan+ Bold", size=font_size)
-            self.font_header = tkfont.Font(family="BYekan+ Bold", size=font_size+3)
-            self.font_big = tkfont.Font(family="BYekan+ Bold", size=font_size+6)
+            # روش مستقیم‌تر - استفاده از فونت با نام کامل
+            font_family = "BYekan+"
+            font_bold_family = "BYekan+ Bold"
             
-            # پیکربندی تمام استایل‌ها با فونت فارسی
-            self.style.configure(".", font=("BYekan+", font_size))
-            self.style.configure("TButton", font=("BYekan+", font_size))
-            self.style.configure("TLabel", font=("BYekan+", font_size))
-            self.style.configure("TEntry", font=("BYekan+", font_size))
-            self.style.configure("TFrame", font=("BYekan+", font_size))
-            self.style.configure("TNotebook", font=("BYekan+", font_size))
-            self.style.configure("TNotebook.Tab", font=("BYekan+", font_size))
-            self.style.configure("TLabelframe.Label", font=("BYekan+ Bold", font_size))
+            # ساخت فونت‌ها با رویکرد جدید
+            print(f"ساخت آبجکت‌های فونت با خانواده {font_family}...")
+            try:
+                self.font_normal = tkfont.Font(family=font_family, size=font_size, weight="normal")
+                self.font_bold = tkfont.Font(family=font_bold_family, size=font_size, weight="bold")
+                self.font_header = tkfont.Font(family=font_bold_family, size=font_size+4, weight="bold")
+                self.font_big = tkfont.Font(family=font_bold_family, size=font_size+8, weight="bold")
+                print("آبجکت‌های فونت با موفقیت ساخته شدند")
+            except Exception as e:
+                print(f"خطا در ساخت آبجکت‌های فونت: {e}")
+                # استفاده از فونت پشتیبان
+                print("استفاده از فونت پشتیبان...")
+                self.font_normal = tkfont.Font(family="Arial", size=font_size)
+                self.font_bold = tkfont.Font(family="Arial", size=font_size, weight="bold")
+                self.font_header = tkfont.Font(family="Arial", size=font_size+4, weight="bold")
+                self.font_big = tkfont.Font(family="Arial", size=font_size+8, weight="bold")
+                font_family = "Arial"  # استفاده از فونت پشتیبان
             
-            # تنظیم دستی فونت‌های ویجت‌های عادی Tk
-            for widget in [self.root] + list(self.root.winfo_children()):
+            # تنظیم عمیق فونت برای همه عناصر
+            # 1. تنظیم گزینه‌های پایه تکینتر
+            print("تنظیم گزینه‌های فونت پایه...")
+            for option in ["*Font", "*TButton.font", "*TLabel.font", "*Menu.font", "*Text.font", "*TEntry.font", "*TCombobox.font"]:
+                self.root.option_add(option, self.font_normal)
+            
+            # 2. تنظیم استایل‌های ttk
+            print("تنظیم استایل‌های ttk...")
+            for style_name in [
+                "TButton", "TLabel", "TEntry", "TFrame", "TNotebook", "TNotebook.Tab", 
+                "TLabelframe", "TLabelframe.Label", "TCombobox", "Treeview", "Treeview.Heading", 
+                "TCheckbutton", "TRadiobutton", "TPanedwindow"]:
+                try:
+                    self.style.configure(style_name, font=(font_family, font_size))
+                except Exception as e:
+                    print(f"خطا در تنظیم استایل {style_name}: {e}")
+            
+            # 3. تنظیم فونت برای همه ویجت‌های موجود
+            print("تنظیم فونت برای ویجت‌های موجود...")
+            def set_font_for_all_widgets(widget):
                 try:
                     widget.configure(font=self.font_normal)
                 except:
                     pass
+                    
+                # بازگشتی برای همه فرزندان
+                for child in widget.winfo_children():
+                    set_font_for_all_widgets(child)
+                    
+            # اجرای تابع برای همه ویجت‌ها
+            set_font_for_all_widgets(self.root)
+            
+            print("ثبت فونت‌ها با موفقیت انجام شد")
             
         except Exception as e:
             print(f"خطا در ثبت فونت‌ها: {str(e)}")
@@ -1312,8 +1417,8 @@ class ShetabDaryaftApp:
         """نمایش دیالوگ تنظیمات"""
         dialog = tk.Toplevel(self.root)
         dialog.title("تنظیمات")
-        dialog.geometry("450x350")
-        dialog.resizable(False, False)
+        dialog.geometry("600x500")
+        dialog.resizable(True, True)
         dialog.transient(self.root)
         dialog.grab_set()
         
@@ -1322,16 +1427,16 @@ class ShetabDaryaftApp:
         main_frame.pack(fill="both", expand=True)
         
         # تنظیمات دانلود
-        download_frame = ttk.LabelFrame(main_frame, text="تنظیمات دانلود", padding=10)
-        download_frame.pack(fill="x", pady=5)
+        download_frame = ttk.LabelFrame(main_frame, text="تنظیمات دانلود", padding=15)
+        download_frame.pack(fill="x", pady=10, padx=10, ipady=5)
         
         # مسیر پیش‌فرض دانلود
-        ttk.Label(download_frame, text="مسیر پیش‌فرض دانلود:").grid(row=0, column=1, sticky="e", padx=5, pady=2)
+        ttk.Label(download_frame, text="مسیر پیش‌فرض دانلود:").grid(row=0, column=1, sticky="e", padx=10, pady=8)
         default_path_var = tk.StringVar(value=self.config.get("default_download_path"))
         default_path_frame = ttk.Frame(download_frame)
-        default_path_frame.grid(row=0, column=0, sticky="w", padx=5, pady=2)
+        default_path_frame.grid(row=0, column=0, sticky="w", padx=10, pady=8)
         
-        default_path_entry = ttk.Entry(default_path_frame, textvariable=default_path_var, width=30)
+        default_path_entry = ttk.Entry(default_path_frame, textvariable=default_path_var, width=40)
         default_path_entry.pack(side="left")
         
         browse_btn = ttk.Button(default_path_frame, text="انتخاب", command=lambda: self._browse_directory(default_path_var))
@@ -1355,15 +1460,15 @@ class ShetabDaryaftApp:
         multithreaded_check.grid(row=3, column=0, columnspan=2, sticky="w", padx=5, pady=2)
         
         # تنظیمات رابط کاربری
-        ui_frame = ttk.LabelFrame(main_frame, text="تنظیمات رابط کاربری", padding=10)
-        ui_frame.pack(fill="x", pady=5)
+        ui_frame = ttk.LabelFrame(main_frame, text="تنظیمات رابط کاربری", padding=15)
+        ui_frame.pack(fill="x", pady=10, padx=10, ipady=5)
         
         # تم برنامه
-        ttk.Label(ui_frame, text="تم برنامه:").grid(row=0, column=1, sticky="e", padx=5, pady=2)
-        themes = ["vapor", "superhero", "darkly", "solar", "cyborg"]
-        theme_var = tk.StringVar(value=self.config.get("theme", "vapor"))
-        theme_combobox = ttk.Combobox(ui_frame, textvariable=theme_var, values=themes, width=15, state="readonly")
-        theme_combobox.grid(row=0, column=0, sticky="w", padx=5, pady=2)
+        ttk.Label(ui_frame, text="تم برنامه:").grid(row=0, column=1, sticky="e", padx=10, pady=8)
+        themes = ["aqua", "vapor", "flatly", "superhero", "darkly", "solar", "cyborg"]
+        theme_var = tk.StringVar(value=self.config.get("theme", "aqua"))
+        theme_combobox = ttk.Combobox(ui_frame, textvariable=theme_var, values=themes, width=20, state="readonly")
+        theme_combobox.grid(row=0, column=0, sticky="w", padx=10, pady=8)
         
         # شروع خودکار دانلود
         auto_start_var = tk.BooleanVar(value=self.config.get("auto_start_download", True))
@@ -1372,12 +1477,12 @@ class ShetabDaryaftApp:
         
         # دکمه‌ها
         button_frame = ttk.Frame(main_frame)
-        button_frame.pack(fill="x", pady=10)
+        button_frame.pack(fill="x", pady=15)
         
-        cancel_btn = ttk.Button(button_frame, text="انصراف", command=dialog.destroy)
-        cancel_btn.pack(side="left", padx=5)
+        cancel_btn = ttk.Button(button_frame, text="انصراف", command=dialog.destroy, width=15)
+        cancel_btn.pack(side="left", padx=15)
         
-        save_btn = ttk.Button(button_frame, text="ذخیره", 
+        save_btn = ttk.Button(button_frame, text="ذخیره", width=15, 
                              command=lambda: self._save_settings(
                                  default_path_var.get(),
                                  concurrent_downloads_var.get(),
@@ -1512,29 +1617,55 @@ class ShetabDaryaftApp:
 
 # اجرای اصلی برنامه
 if __name__ == "__main__":
-    # برای شناسایی فونت‌ها در Tkinter
-    if os.name == "nt":  # ویندوز
-        import ctypes
+    # بارگذاری ماژول مورد نیاز برای فونت
+    import tkinter.font as tkfont
+    import ctypes
+    from ctypes import WinDLL
+    
+    # تلاش برای بارگذاری فونت‌ها
+    if os.name == "nt":
         try:
-            # افزودن مسیر فونت‌ها به مسیرهای جستجوی سیستم
-            font_added = False
-            for font_file in os.listdir(FONT_DIR):
-                if font_file.endswith('.ttf'):
-                    font_path = os.path.join(FONT_DIR, font_file)
-                    if os.path.exists(font_path):
-                        # بارگذاری فونت در ویندوز
-                        result = ctypes.windll.gdi32.AddFontResourceW(font_path)
-                        if result > 0:
-                            font_added = True
-                            print(f"فونت با موفقیت بارگذاری شد: {font_file}")
-                        else:
-                            print(f"خطا در بارگذاری فونت: {font_file}")
-                            
+            # بارگذاری مستقیم فونت‌ها در ویندوز
+            FONTS_COUNT = 32
+            FR_PRIVATE = 0x10
+            gdi32 = WinDLL('gdi32')
+            GDI32 = ctypes.WinDLL('gdi32')
+            user32 = ctypes.WinDLL('user32')
+            
+            # فونت‌های مورد نیاز
+            font_files = [
+                "BYekan+.ttf",
+                "BYekan+ Bold.ttf"
+            ]
+            
+            # بارگذاری تک تک فونت‌ها
+            for font_file in font_files:
+                font_path = os.path.join(FONT_DIR, font_file)
+                if os.path.exists(font_path):
+                    print(f"بارگذاری فونت {font_file} از مسیر {font_path}...")
+                    # سعی با روش اول: استفاده از AddFontResourceW
+                    try:
+                        res1 = GDI32.AddFontResourceW(font_path)
+                        if res1 > 0:
+                            print(f"فونت با موفقیت با روش اول بارگذاری شد: {font_file}")
+                    except Exception as e1:
+                        print(f"خطا در روش اول بارگذاری فونت {font_file}: {e1}")
+                        
+                    # سعی با روش دوم: استفاده از AddFontResourceExW
+                    try:
+                        res2 = gdi32.AddFontResourceExW(font_path, FR_PRIVATE, 0)
+                        if res2 > 0:
+                            print(f"فونت با موفقیت با روش دوم بارگذاری شد: {font_file}")
+                    except Exception as e2:
+                        print(f"خطا در روش دوم بارگذاری فونت {font_file}: {e2}")
+                else:
+                    print(f"فایل فونت پیدا نشد: {font_path}")
+            
             # اعلام تغییر فونت به سیستم
-            if font_added:
-                ctypes.windll.user32.SendMessageW(0xFFFF, 0x001D, 0, 0)  # WM_FONTCHANGE
+            user32.SendMessageW(0xFFFF, 0x001D, 0, 0)  # WM_FONTCHANGE برای همه پنجره‌ها
+            
         except Exception as e:
-            print(f"خطا در بارگذاری فونت: {str(e)}")
+            print(f"خطا در فرآیند بارگذاری فونت: {str(e)}")
     
     # ایجاد پنجره اصلی
     root = tk.Tk()
@@ -1554,6 +1685,12 @@ if __name__ == "__main__":
         root.tk.call('tcl_setRightToLeftVal', 1)
     except:
         pass
+    
+    # تلاش برای بارگذاری پکیج tkfontchooser برای اطلاعات بیشتر فونت
+    try:
+        root.tk.call('package', 'require', 'fontchooser')
+    except:
+        pass
         
     # تنظیم عنوان و آیکون برنامه
     root.title(APP_NAME)
@@ -1569,6 +1706,9 @@ if __name__ == "__main__":
             print("تم Aqua از قبل وجود دارد.")
     except:
         print("خطا در بررسی تم‌های موجود")
+    
+    # نمایش اطلاعات فونت‌های سیستم
+    print_font_info()
     
     # راه‌اندازی برنامه
     app = ShetabDaryaftApp(root)

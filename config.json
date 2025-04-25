@@ -4,7 +4,7 @@
   "max_threads_per_download": 9,
   "use_multithreaded_download": true,
   "chunk_size": 1048576,
-  "theme": "vapor",
+  "theme": "cyborg",
   "language": "fa",
   "rtl": true,
   "check_for_updates": true,
