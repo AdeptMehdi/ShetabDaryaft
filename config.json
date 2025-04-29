@@ -1,7 +1,7 @@
 {
-  "default_download_path": "D:/tesyt",
-  "max_concurrent_downloads": 8,
-  "max_threads_per_download": 9,
+  "default_download_path": "D:/Downloads/gMW",
+  "max_concurrent_downloads": 10,
+  "max_threads_per_download": 11,
   "use_multithreaded_download": true,
   "chunk_size": 1048576,
   "theme": "cyborg",

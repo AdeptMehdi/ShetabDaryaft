@@ -16,8 +16,6 @@ import requests
 import queue
 import urllib.parse
 from tkinter import filedialog, messagebox, ttk
-from ttkbootstrap import Style
-import ttkbootstrap as ttk
 from PIL import Image, ImageTk, ImageDraw, ImageFont
 import math
 import re
@@ -27,7 +25,7 @@ import json
 
 # تنظیمات اولیه
 APP_NAME = "شتاب دریافت"
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.0.1"
 APP_PATH = os.path.dirname(os.path.abspath(__file__))
 ASSETS_DIR = os.path.join(APP_PATH, "assets")
 FONT_DIR = os.path.join(APP_PATH, "font")
@@ -737,32 +735,11 @@ class ShetabDaryaftApp:
         # بارگذاری تنظیمات
         self.config = self._load_config()
         
-        # ایجاد و تنظیم تم اختصاصی Aqua
-        if self.config.get("theme") == "aqua":
-            # اگر تم انتخابی Aqua است، تم را خودمان بسازیم
-            self.style = Style(theme="flatly")  # استفاده از یک تم پایه
-            
-            # رنگ‌های اصلی تم Aqua
-            aqua_primary = "#00b8d4"       # آبی روشن
-            aqua_secondary = "#0288d1"     # آبی متوسط
-            aqua_accent = "#00e5ff"        # آبی فیروزه‌ای
-            aqua_bg = "#e0f7fa"            # آبی بسیار کم‌رنگ
-            aqua_text = "#263238"          # تیره برای متن
-            
-            # پیکربندی المان‌های رابط کاربری با تم Aqua
-            self.style.configure("TButton", background=aqua_primary, foreground=aqua_text, borderwidth=1, focusthickness=0)
-            self.style.map("TButton", background=[("active", aqua_secondary), ("pressed", aqua_secondary)])
-            
-            self.style.configure("TFrame", background=aqua_bg)
-            self.style.configure("TLabel", background=aqua_bg, foreground=aqua_text)
-            self.style.configure("TLabelframe", background=aqua_bg, foreground=aqua_text)
-            self.style.configure("TLabelframe.Label", background=aqua_bg, foreground=aqua_text)
-            
-            self.style.configure("Horizontal.TProgressbar", background=aqua_primary, troughcolor=aqua_bg)
-            self.style.configure("TEntry", fieldbackground="white", foreground=aqua_text)
-        else:
-            # استفاده از تم معمولی از ttkbootstrap
-            self.style = Style(theme=self.config.get("theme", "flatly"))
+        # تنظیم رنگ‌های اصلی تم
+        self.colors = self._setup_colors()
+        
+        # تنظیم استایل‌های ttk
+        self._setup_styles()
         
         # ایجاد مدیر دانلود
         self.download_manager = DownloadManager(self.config, self._update_download_ui)
@@ -782,6 +759,74 @@ class ShetabDaryaftApp:
         
         # ذخیره‌سازی تنظیمات هنگام خروج
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
+    
+    def _setup_colors(self):
+        """تنظیم رنگ‌های مورد استفاده در برنامه"""
+        colors = {}
+        
+        # رنگ‌های پیش‌فرض
+        default_colors = {
+            "primary": "#00b8d4",       # آبی روشن
+            "secondary": "#0288d1",     # آبی متوسط
+            "accent": "#00e5ff",        # آبی فیروزه‌ای
+            "bg": "#e0f7fa",            # آبی بسیار کم‌رنگ
+            "text": "#263238",          # تیره برای متن
+            "button_bg": "#00b8d4",     # رنگ دکمه‌ها
+            "button_fg": "#ffffff",     # رنگ متن دکمه‌ها
+            "button_active": "#0288d1", # رنگ دکمه‌ها در حالت فعال
+            "progress_fg": "#00b8d4",   # رنگ نوار پیشرفت
+            "progress_bg": "#e0f7fa"    # رنگ پس‌زمینه نوار پیشرفت
+        }
+        
+        # تنظیم رنگ‌ها بر اساس تم انتخاب شده
+        theme = self.config.get("theme", "aqua")
+        
+        if theme == "aqua":
+            colors = default_colors
+        elif theme == "dark":
+            colors = {
+                "primary": "#2c3e50",       # تیره
+                "secondary": "#34495e",     # تیره‌تر
+                "accent": "#3498db",        # آبی
+                "bg": "#1a1a1a",            # تیره برای پس‌زمینه
+                "text": "#ecf0f1",          # روشن برای متن
+                "button_bg": "#3498db",     # آبی برای دکمه‌ها
+                "button_fg": "#ffffff",     # سفید برای متن دکمه‌ها
+                "button_active": "#2980b9", # آبی تیره‌تر برای دکمه‌های فعال
+                "progress_fg": "#3498db",   # آبی برای نوار پیشرفت
+                "progress_bg": "#2c3e50"    # تیره برای پس‌زمینه نوار پیشرفت
+            }
+        else:
+            # استفاده از رنگ‌های پیش‌فرض برای سایر تم‌ها
+            colors = default_colors
+        
+        return colors
+    
+    def _setup_styles(self):
+        """تنظیم استایل‌های ttk"""
+        style = ttk.Style()
+        
+        # تنظیم رنگ پس‌زمینه اصلی
+        self.root.configure(background=self.colors["bg"])
+        
+        # تنظیم استایل‌های ttk
+        style.configure("TFrame", background=self.colors["bg"])
+        style.configure("TLabel", background=self.colors["bg"], foreground=self.colors["text"])
+        style.configure("TButton", background=self.colors["button_bg"], foreground=self.colors["button_fg"])
+        style.map("TButton", background=[("active", self.colors["button_active"])])
+        style.configure("TLabelframe", background=self.colors["bg"], foreground=self.colors["text"])
+        style.configure("TLabelframe.Label", background=self.colors["bg"], foreground=self.colors["text"])
+        style.configure("Horizontal.TProgressbar", background=self.colors["progress_fg"], troughcolor=self.colors["progress_bg"])
+        style.configure("TEntry", fieldbackground="white", foreground=self.colors["text"])
+        style.configure("TCombobox", fieldbackground="white", background=self.colors["bg"], foreground=self.colors["text"])
+        style.configure("Treeview", background=self.colors["bg"], fieldbackground=self.colors["bg"], foreground=self.colors["text"])
+        style.configure("Treeview.Heading", background=self.colors["primary"], foreground=self.colors["button_fg"])
+        
+        # تنظیم استایل برای آیتم انتخاب شده
+        style.configure("Selected.TFrame", background=self.colors["secondary"])
+        
+        # ذخیره استایل برای استفاده در جاهای دیگر
+        self.style = style
     
     def _load_fonts_directly(self):
         """بارگذاری مستقیم فونت‌های فارسی در ویندوز"""
