@@ -1320,7 +1320,7 @@ class ShetabDaryaftApp:
         downloads = self.download_manager.get_all_downloads()
         
         # به‌روزرسانی شمارنده دانلودها
-        self.download_count_label.config(text=f"تعداد: {len(downloads)}")
+        self.download_count_label.config(text=f"تعداد دانلودها: {len(downloads)}")
         
         # یافتن شناسه‌های دانلودهای موجود
         current_ids = set(item.id for item in downloads)
@@ -1337,66 +1337,186 @@ class ShetabDaryaftApp:
         row = 0
         for item in downloads:
             if item.id not in self.download_items_ui:
-                frame = tk.Frame(self.downloads_scrollable_frame, bg=self.colors["bg"], bd=1, relief=tk.GROOVE)
-                frame.grid(row=row, column=0, sticky="ew", padx=5, pady=5)
+                # ایجاد فریم جدید با طراحی مدرن
+                item_bg = self.colors.get("list_item_bg", self.colors["bg"])
                 
-                # فریم بالایی
-                top_frame = tk.Frame(frame, bg=self.colors["bg"])
-                top_frame.pack(fill="x", pady=(0, 2))
+                frame = tk.Frame(self.downloads_scrollable_frame, bg=item_bg, bd=1, 
+                              relief=tk.GROOVE, padx=10, pady=10)
+                frame.grid(row=row, column=0, sticky="ew", padx=5, pady=5, ipadx=5, ipady=5)
+                
+                # تنظیم گسترش افقی
+                self.downloads_scrollable_frame.columnconfigure(0, weight=1)
+                
+                # فریم اطلاعات فایل (بالا)
+                info_frame = tk.Frame(frame, bg=item_bg)
+                info_frame.pack(fill="x", expand=True)
+                
+                # آیکون وضعیت
+                status_icon = self._get_status_icon(item.status)
+                status_label = tk.Label(info_frame, text=status_icon, font=(self.font_bold[0], 18), 
+                                     bg=item_bg, fg=self._get_status_color(item.status),
+                                     padx=5)
+                status_label.pack(side="right")
                 
                 # نام فایل
-                filename_label = tk.Label(top_frame, text=item.filename, font=self.font_bold, 
-                                        bg=self.colors["bg"], fg=self.colors["text"])
-                filename_label.pack(side="right")
+                filename_label = tk.Label(info_frame, text=item.filename, font=self.font_bold, 
+                                       bg=item_bg, fg=self.colors["text"],
+                                       anchor="w", padx=5)
+                filename_label.pack(side="right", fill="x", expand=True)
                 
                 # وضعیت
-                status_label = tk.Label(top_frame, text=self._get_status_text(item.status), 
-                                       bg=self.colors["bg"], fg=self.colors["text"])
-                status_label.pack(side="left")
+                status_text_label = tk.Label(info_frame, text=self._get_status_text(item.status), 
+                                          bg=item_bg, fg=self._get_status_color(item.status),
+                                          font=self.font_normal, padx=5)
+                status_text_label.pack(side="left")
                 
-                # فریم پایینی
-                bottom_frame = tk.Frame(frame, bg=self.colors["bg"])
-                bottom_frame.pack(fill="x", pady=(2, 0))
+                # نوار پیشرفت
+                progress_frame = tk.Frame(frame, bg=item_bg, pady=5)
+                progress_frame.pack(fill="x", expand=True)
                 
-                # نوار پیشرفت - استفاده از ttk.Progressbar چون Tkinter استاندارد نوار پیشرفت ندارد
-                progress_bar = ttk.Progressbar(bottom_frame, value=item.progress, length=400)
-                progress_bar.pack(side="right", padx=(0, 5))
+                # استفاده از ttk.Progressbar با استایل سفارشی
+                progress_height = 15  # افزایش ارتفاع نوار پیشرفت
+                progress_style = f"Custom{item.id}.Horizontal.TProgressbar"
                 
-                # اطلاعات اضافی
-                info_label = tk.Label(bottom_frame, text=self._get_download_info_text(item), 
-                                     bg=self.colors["bg"], fg=self.colors["text"])
-                info_label.pack(side="left")
+                # تنظیم رنگ نوار پیشرفت بر اساس وضعیت
+                progress_color = self._get_progress_color(item.status)
+                self.style.configure(progress_style, background=progress_color, 
+                                 troughcolor=self.colors.get("progress_bg", "#f0f0f0"), 
+                                 borderwidth=0, thickness=progress_height)
                 
-                # افزودن رویداد کلیک برای انتخاب دانلود
-                frame.bind("<Button-1>", lambda e, id=item.id: self._select_download(id))
-                top_frame.bind("<Button-1>", lambda e, id=item.id: self._select_download(id))
-                bottom_frame.bind("<Button-1>", lambda e, id=item.id: self._select_download(id))
-                filename_label.bind("<Button-1>", lambda e, id=item.id: self._select_download(id))
-                status_label.bind("<Button-1>", lambda e, id=item.id: self._select_download(id))
-                progress_bar.bind("<Button-1>", lambda e, id=item.id: self._select_download(id))
-                info_label.bind("<Button-1>", lambda e, id=item.id: self._select_download(id))
+                progress_bar = ttk.Progressbar(progress_frame, style=progress_style, 
+                                            value=item.progress, length=400)
+                progress_bar.pack(fill="x", expand=True, padx=5)
                 
-                # ذخیره اشاره‌گرها به المان‌ها
+                # فریم اطلاعات اضافی (پایین)
+                details_frame = tk.Frame(frame, bg=item_bg)
+                details_frame.pack(fill="x", expand=True, pady=(5, 0))
+                
+                # سایز و سرعت - سمت راست
+                file_info = self._get_download_info_text(item)
+                info_label = tk.Label(details_frame, text=file_info, 
+                                   bg=item_bg, fg=self.colors["text"],
+                                   font=self.font_normal, anchor="w")
+                info_label.pack(side="right", padx=5)
+                
+                # افزودن رویدادهای کلیک
+                for widget in [frame, info_frame, progress_frame, details_frame, filename_label, 
+                            status_label, status_text_label, progress_bar, info_label]:
+                    widget.bind("<Button-1>", lambda e, id=item.id: self._select_download(id))
+                    # تغییر حالت نشانگر موس به دست
+                    widget.bind("<Enter>", lambda e, w=widget, bg=item_bg: self._on_item_enter(w, bg))
+                    widget.bind("<Leave>", lambda e, w=widget, bg=item_bg: self._on_item_leave(w, bg))
+                
+                # ذخیره اشاره‌گرها
                 self.download_items_ui[item.id] = {
-                    'widgets': [frame, top_frame, bottom_frame, filename_label, status_label, progress_bar, info_label],
+                    'widgets': [frame, info_frame, progress_frame, details_frame, filename_label, 
+                               status_label, status_text_label, progress_bar, info_label],
                     'filename_label': filename_label,
                     'status_label': status_label,
+                    'status_text_label': status_text_label,
                     'progress_bar': progress_bar,
                     'info_label': info_label,
-                    'frame': frame
+                    'frame': frame,
+                    'bg_color': item_bg
                 }
                 
                 row += 1
             else:
-                # به‌روزرسانی المان‌های موجود
+                # به‌روزرسانی آیتم‌های موجود
                 ui_item = self.download_items_ui[item.id]
-                ui_item['status_label'].config(text=self._get_status_text(item.status))
+                
+                # به‌روزرسانی آیکون وضعیت
+                ui_item['status_label'].config(text=self._get_status_icon(item.status),
+                                          fg=self._get_status_color(item.status))
+                
+                # به‌روزرسانی متن وضعیت
+                ui_item['status_text_label'].config(text=self._get_status_text(item.status),
+                                               fg=self._get_status_color(item.status))
+                
+                # به‌روزرسانی نوار پیشرفت
                 ui_item['progress_bar'].config(value=item.progress)
+                
+                # به‌روزرسانی اطلاعات دانلود
                 ui_item['info_label'].config(text=self._get_download_info_text(item))
+                
+                # به‌روزرسانی رنگ نوار پیشرفت
+                progress_style = f"Custom{item.id}.Horizontal.TProgressbar"
+                progress_color = self._get_progress_color(item.status)
+                self.style.configure(progress_style, background=progress_color)
                 
                 if self.selected_download_id == item.id:
                     # به‌روزرسانی جزئیات اگر این دانلود انتخاب شده است
                     self._update_details()
+        
+        # به‌روزرسانی آمار دانلودها
+        self._update_download_stats()
+    
+    def _on_item_enter(self, widget, original_bg):
+        """رویداد هنگام ورود موس به آیتم دانلود"""
+        hover_bg = self.colors.get("list_item_hover", self._lighten_color(original_bg))
+        widget.configure(bg=hover_bg)
+        
+        # تغییر رنگ همه ویجت‌های داخلی که پس‌زمینه دارند
+        for child in widget.winfo_children():
+            if hasattr(child, 'configure') and 'bg' in child.config():
+                child.configure(bg=hover_bg)
+    
+    def _on_item_leave(self, widget, original_bg):
+        """رویداد هنگام خروج موس از آیتم دانلود"""
+        widget.configure(bg=original_bg)
+        
+        # بازگرداندن رنگ همه ویجت‌های داخلی
+        for child in widget.winfo_children():
+            if hasattr(child, 'configure') and 'bg' in child.config():
+                child.configure(bg=original_bg)
+    
+    def _lighten_color(self, hex_color, factor=0.15):
+        """روشن‌تر کردن رنگ برای حالت هاور"""
+        # تبدیل رنگ هگز به RGB
+        hex_color = hex_color.lstrip('#')
+        rgb = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+        
+        # روشن‌تر کردن
+        rgb_new = tuple(min(int(c + (255 - c) * factor), 255) for c in rgb)
+        
+        # بازگرداندن به هگز
+        return f"#{rgb_new[0]:02x}{rgb_new[1]:02x}{rgb_new[2]:02x}"
+    
+    def _get_status_icon(self, status):
+        """آیکون متناسب با وضعیت دانلود"""
+        icons = {
+            "pending": "⏳",
+            "downloading": "⬇️",
+            "paused": "⏸️",
+            "completed": "✅",
+            "error": "❌",
+            "canceled": "⛔"
+        }
+        return icons.get(status, "❓")
+    
+    def _get_status_color(self, status):
+        """رنگ متناسب با وضعیت دانلود"""
+        colors = {
+            "pending": self.colors.get("warning", "#ffc107"),
+            "downloading": self.colors.get("accent", "#00b8d4"),
+            "paused": self.colors.get("warning", "#ffc107"),
+            "completed": self.colors.get("success", "#28a745"),
+            "error": self.colors.get("danger", "#dc3545"),
+            "canceled": self.colors.get("danger", "#dc3545")
+        }
+        return colors.get(status, self.colors["text"])
+    
+    def _get_progress_color(self, status):
+        """رنگ نوار پیشرفت بر اساس وضعیت"""
+        colors = {
+            "pending": self.colors.get("warning", "#ffc107"),
+            "downloading": self.colors.get("accent", "#00b8d4"),
+            "paused": self.colors.get("warning", "#ffc107"),
+            "completed": self.colors.get("success", "#28a745"),
+            "error": self.colors.get("danger", "#dc3545"),
+            "canceled": self.colors.get("danger", "#dc3545")
+        }
+        return colors.get(status, self.colors.get("progress_fg", "#00b8d4"))
     
     def _get_status_text(self, status):
         """تبدیل وضعیت به متن فارسی"""
@@ -1482,18 +1602,65 @@ class ShetabDaryaftApp:
         """انتخاب یک دانلود از لیست"""
         # حذف حالت انتخاب قبلی
         if self.selected_download_id and self.selected_download_id in self.download_items_ui:
-            for widget in self.download_items_ui[self.selected_download_id]['widgets']:
-                widget.configure(style="")
+            ui_item = self.download_items_ui[self.selected_download_id]
+            bg_color = ui_item.get('bg_color', self.colors["bg"])
+            
+            # بازگرداندن رنگ همه ویجت‌ها به حالت عادی
+            for widget in ui_item['widgets']:
+                if hasattr(widget, 'configure') and 'bg' in widget.config():
+                    widget.configure(bg=bg_color)
+            
+            # حذف بوردر انتخاب
+            ui_item['frame'].configure(relief=tk.GROOVE, bd=1)
         
         # تنظیم دانلود جدید انتخاب شده
         self.selected_download_id = download_id
         
         # تغییر ظاهر آیتم انتخاب شده
         if download_id in self.download_items_ui:
-            self.download_items_ui[download_id]['widgets'][0].configure(style="TFrame")
+            ui_item = self.download_items_ui[download_id]
+            
+            # تغییر رنگ پس‌زمینه به رنگ انتخاب
+            selected_bg = self.colors.get("secondary", self._lighten_color(ui_item.get('bg_color', self.colors["bg"]), 0.1))
+            
+            # اعمال رنگ انتخاب به همه ویجت‌ها
+            for widget in ui_item['widgets']:
+                if hasattr(widget, 'configure') and 'bg' in widget.config():
+                    widget.configure(bg=selected_bg)
+            
+            # افزایش برجستگی بوردر
+            ui_item['frame'].configure(relief=tk.RIDGE, bd=2)
+        
+        # فعال/غیرفعال کردن دکمه‌های کنترل
+        self._update_control_buttons()
         
         # به‌روزرسانی پنل جزئیات
         self._update_details()
+    
+    def _update_control_buttons(self):
+        """به‌روزرسانی وضعیت دکمه‌های کنترل بر اساس وضعیت دانلود انتخاب شده"""
+        if not self.selected_download_id:
+            # غیرفعال کردن همه دکمه‌ها
+            self.pause_btn.config(state="disabled")
+            self.resume_btn.config(state="disabled")
+            self.cancel_btn.config(state="disabled")
+            self.remove_btn.config(state="disabled")
+            return
+            
+        # دریافت اطلاعات دانلود انتخاب شده
+        item = self.download_manager.get_download(self.selected_download_id)
+        if not item:
+            # اگر دانلود موجود نیست
+            self.selected_download_id = None
+            self._clear_details()
+            self._update_control_buttons()
+            return
+            
+        # تنظیم وضعیت دکمه‌ها بر اساس وضعیت دانلود
+        self.pause_btn.config(state="normal" if item.status == "downloading" else "disabled")
+        self.resume_btn.config(state="normal" if item.status == "paused" else "disabled")
+        self.cancel_btn.config(state="normal" if item.status in ["downloading", "paused", "pending"] else "disabled")
+        self.remove_btn.config(state="normal" if item.status in ["completed", "error", "canceled"] else "disabled")
     
     def _pause_download(self):
         """توقف موقت دانلود انتخاب شده"""
