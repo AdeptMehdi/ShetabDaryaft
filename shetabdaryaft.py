@@ -1075,21 +1075,21 @@ class ShetabDaryaftApp:
         self.completed_count_label = tk.Label(stats_frame, text="تکمیل شده: 0", 
                                           font=self.font_normal, 
                                           bg=self.colors["secondary"], 
-                                          fg=self.colors["success"],
+                                          fg=self.colors.get("success", self.colors["accent"]),
                                           anchor="w")
         self.completed_count_label.pack(fill="x", pady=2)
         
         self.paused_count_label = tk.Label(stats_frame, text="متوقف شده: 0", 
                                       font=self.font_normal, 
                                       bg=self.colors["secondary"], 
-                                      fg=self.colors["warning"],
+                                      fg=self.colors.get("warning", self.colors["accent"]),
                                       anchor="w")
         self.paused_count_label.pack(fill="x", pady=2)
         
         self.error_count_label = tk.Label(stats_frame, text="خطا: 0", 
                                      font=self.font_normal, 
                                      bg=self.colors["secondary"], 
-                                     fg=self.colors["danger"],
+                                     fg=self.colors.get("danger", self.colors["accent"]),
                                      anchor="w")
         self.error_count_label.pack(fill="x", pady=2)
         
@@ -1145,6 +1145,24 @@ class ShetabDaryaftApp:
                                         fg=self.colors["text"])
         self.download_count_label.pack(side="left", padx=5, pady=5)
         
+        # ایجاد منوی اصلی
+        menubar = tk.Menu(self.root)
+        self.root.config(menu=menubar)
+        
+        # منوی فایل
+        file_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="فایل", menu=file_menu)
+        file_menu.add_command(label="دانلود جدید", command=self._show_new_download_dialog)
+        file_menu.add_separator()
+        file_menu.add_command(label="تنظیمات", command=self._show_settings_dialog)
+        file_menu.add_separator()
+        file_menu.add_command(label="خروج", command=self._on_close)
+        
+        # منوی راهنما
+        help_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="راهنما", menu=help_menu)
+        help_menu.add_command(label="درباره برنامه", command=self._show_about_dialog)
+        
         # فریم لیست دانلودها
         downloads_frame = tk.Frame(content_container, bg=self.colors["bg"], bd=1, relief=tk.SOLID)
         content_container.add(downloads_frame)
@@ -1166,11 +1184,11 @@ class ShetabDaryaftApp:
             lambda e: downloads_canvas.configure(scrollregion=downloads_canvas.bbox("all"))
         )
         
-        downloads_canvas.create_window((0, 0), window=self.downloads_scrollable_frame, anchor="nw", width=content_container.winfo_reqwidth()-20)
+        downloads_canvas.create_window((0, 0), window=self.downloads_scrollable_frame, anchor="nw")
         downloads_canvas.configure(yscrollcommand=scrollbar.set)
         
         # تغییر اندازه بوم با تغییر اندازه پنجره
-        content_container.bind("<Configure>", lambda e: downloads_canvas.configure(width=e.width-25))
+        downloads_frame.bind("<Configure>", lambda e: downloads_canvas.configure(width=e.width-20))
         
         downloads_canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
@@ -1186,7 +1204,7 @@ class ShetabDaryaftApp:
         # استایل برچسب‌های اطلاعات
         info_label_style = {"bg": self.colors["bg"], "fg": self.colors["text"], 
                          "font": self.font_normal, "pady": 2, "anchor": "e"}
-        info_value_style = {"bg": self.colors["bg"], "fg": self.colors["accent"], 
+        info_value_style = {"bg": self.colors["bg"], "fg": self.colors.get("accent", self.colors["text"]), 
                          "font": self.font_normal, "pady": 2, "anchor": "w"}
         
         # ردیف اول
@@ -1225,6 +1243,11 @@ class ShetabDaryaftApp:
         self.detail_eta = tk.Label(details_grid, text="-", **info_value_style)
         self.detail_eta.grid(row=3, column=0, sticky="w", padx=5)
         
+        # زمان سپری شده
+        tk.Label(details_grid, text="زمان سپری شده:", **info_label_style).grid(row=4, column=1, sticky="e", padx=5)
+        self.detail_elapsed = tk.Label(details_grid, text="-", **info_value_style)
+        self.detail_elapsed.grid(row=4, column=0, sticky="w", padx=5)
+        
         # تنظیم وزن ستون‌ها
         for i in range(4):
             details_grid.columnconfigure(i, weight=1)
@@ -1251,7 +1274,7 @@ class ShetabDaryaftApp:
         for child in details_grid.winfo_children():
             if isinstance(child, tk.Label):
                 child.configure(justify="right")
-                
+        
         # تابع برای بروزرسانی آمار دانلود‌ها
         self._update_download_stats()
     
@@ -1837,6 +1860,33 @@ class ShetabDaryaftApp:
         # ذخیره تاریخچه دانلودها
         self.download_manager.save_history()
         self.root.destroy()
+    
+    def _update_download_stats(self):
+        """به‌روزرسانی آمار دانلودها در ساید بار"""
+        downloads = self.download_manager.get_all_downloads()
+        
+        # شمارش وضعیت‌های مختلف
+        active_count = sum(1 for item in downloads if item.status == "downloading")
+        completed_count = sum(1 for item in downloads if item.status == "completed")
+        paused_count = sum(1 for item in downloads if item.status == "paused")
+        error_count = sum(1 for item in downloads if item.status == "error" or item.status == "canceled")
+        
+        # به‌روزرسانی برچسب‌های آمار
+        self.active_count_label.config(text=f"در حال دانلود: {active_count}")
+        self.completed_count_label.config(text=f"تکمیل شده: {completed_count}")
+        self.paused_count_label.config(text=f"متوقف شده: {paused_count}")
+        self.error_count_label.config(text=f"خطا: {error_count}")
+        
+        # به‌روزرسانی وضعیت در نوار وضعیت
+        if active_count > 0:
+            self.status_label.config(text=f"در حال دانلود {active_count} فایل")
+        elif len(downloads) == 0:
+            self.status_label.config(text="آماده برای دانلود")
+        else:
+            self.status_label.config(text=f"تکمیل شده: {completed_count} | خطا: {error_count}")
+        
+        # فراخوانی مجدد برای بروزرسانی بعدی بعد از ۲ ثانیه
+        self.root.after(2000, self._update_download_stats)
 
 
 # اجرای اصلی برنامه
