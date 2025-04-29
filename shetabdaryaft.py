@@ -25,7 +25,7 @@ import json
 
 # تنظیمات اولیه
 APP_NAME = "شتاب دریافت"
-APP_VERSION = "1.0.1"
+APP_VERSION = "2.0.0.0"
 APP_PATH = os.path.dirname(os.path.abspath(__file__))
 ASSETS_DIR = os.path.join(APP_PATH, "assets")
 FONT_DIR = os.path.join(APP_PATH, "font")

@@ -16,9 +16,10 @@
 
 <p align="center">
     <img src="https://img.shields.io/badge/زبان-Python-blue" alt="زبان" />
-    <img src="https://img.shields.io/badge/رابط%20کاربری-ttkbootstrap-blueviolet" alt="رابط کاربری" />
+    <img src="https://img.shields.io/badge/رابط%20کاربری-Tkinter-blueviolet" alt="رابط کاربری" />
     <img src="https://img.shields.io/badge/پلتفرم-ویندوز-green" alt="پلتفرم" />
     <img src="https://img.shields.io/badge/زبان-فارسی-orange" alt="زبان" />
+    <img src="https://img.shields.io/badge/نسخه-1.0.1-red" alt="نسخه" />
 </p>
 
 ## 📝 معرفی
@@ -27,14 +28,21 @@
 
 ## ✨ ویژگی‌ها
 
-- **رابط کاربری مدرن و زیبا** با تم آبی اختصاصی "Aqua"
+- **رابط کاربری مدرن و حرفه‌ای** با طراحی جدید مانند دانلود منیجرهای معروف
+- **سایدبار اختصاصی** برای دسترسی سریع به امکانات برنامه
+- **سه تم زیبا**:
+  - **Aqua**: تم آبی اختصاصی 
+  - **Dark**: تم تیره برای استفاده در شب
+  - **Cyborg**: تم مدرن با رنگ‌های سبز و تیره
 - **دانلود چندنخی (Multi-threaded)** برای افزایش سرعت دانلود
-- **کاملاً فارسی** با پشتیبانی از راست به چپ و فونت فارسی
+- **نمایش آمار دانلودها** با رنگ‌بندی متمایز برای هر وضعیت
 - **قابلیت مدیریت دانلود‌ها** (شروع، توقف، ازسرگیری، حذف)
 - **نمایش اطلاعات دانلود** شامل سرعت، حجم فایل و زمان باقی‌مانده
+- **نوار پیشرفت رنگی** متناسب با وضعیت هر دانلود
+- **آیکون‌های وضعیت** برای تشخیص سریع وضعیت دانلودها
 - **تاریخچه دانلود** برای دسترسی به دانلودهای قبلی
-- **امکان انتخاب مسیر ذخیره‌سازی** فایل‌ها
-- **نمایش تاریخ و زمان فارسی** با استفاده از تقویم جلالی
+- **امکان انتخاب اندازه فونت** برای خوانایی بهتر
+- **نمایش وضعیت دانلودها** در نوار وضعیت
 
 ## 🖼️ تصاویر
 
@@ -67,15 +75,16 @@ python shetabdaryaft.py
 
 ## 📋 استفاده
 
-1. **افزودن دانلود جدید**: روی دکمه "افزودن دانلود +" کلیک کنید و آدرس دانلود را وارد نمایید.
-2. **مدیریت دانلود‌ها**: با استفاده از دکمه‌های کنترلی، دانلود‌ها را مدیریت کنید (توقف، ازسرگیری، حذف).
-3. **تنظیمات**: از طریق منوی تنظیمات، مواردی مانند مسیر ذخیره‌سازی و تعداد نخ‌های دانلود را تغییر دهید.
-4. **تاریخچه**: به دانلودهای قبلی خود دسترسی داشته باشید.
+1. **افزودن دانلود جدید**: روی دکمه "دانلود جدید" در سایدبار یا از منوی فایل کلیک کنید.
+2. **مدیریت دانلود‌ها**: با انتخاب دانلود و استفاده از دکمه‌های کنترلی در نوار ابزار، دانلود‌ها را مدیریت کنید.
+3. **تغییر تم**: از طریق منوی تنظیمات می‌توانید تم ظاهری برنامه را به آبی، تیره یا سایبورگ تغییر دهید.
+4. **تنظیم اندازه فونت**: برای راحتی بیشتر در خواندن، می‌توانید اندازه فونت را تغییر دهید.
+5. **مشاهده آمار دانلودها**: در سایدبار تعداد دانلودهای فعال، متوقف شده و تکمیل شده را مشاهده کنید.
 
 ## 🔧 تکنولوژی‌ها
 
 - **Python**: زبان برنامه‌نویسی اصلی
-- **ttkbootstrap**: برای ایجاد رابط کاربری مدرن
+- **Tkinter**: برای ایجاد رابط کاربری
 - **Requests**: برای مدیریت درخواست‌های HTTP
 - **Threading**: برای پیاده‌سازی دانلود چندنخی
 - **Pillow**: برای مدیریت تصاویر و آیکون‌ها
@@ -86,21 +95,29 @@ python shetabdaryaft.py
 ShetabDaryaft/
 ├── shetabdaryaft.py     # فایل اصلی برنامه
 ├── requirements.txt     # وابستگی‌های پروژه
+├── config.json          # تنظیمات برنامه
+├── download_history.json # تاریخچه دانلودها
 ├── assets/              # فایل‌های گرافیکی
 │   ├── logo.png
 │   └── icon.ico
+├── img/                 # تصاویر
 ├── font/                # فونت‌های فارسی
 │   ├── BYekan+.ttf
 │   └── BYekan+ Bold.ttf
+├── temp/                # فایل‌های موقت
 └── README.md            # این فایل
 ```
 
 ## 🔄 بروزرسانی‌ها
 
 آخرین بروزرسانی: بهار ۱۴۰۴
-- افزودن تم اختصاصی Aqua
-- بهبود نمایش فونت‌های فارسی
-- افزایش مقیاس و خوانایی رابط کاربری
+- **طراحی مجدد رابط کاربری** با الهام از دانلود منیجرهای مدرن
+- **اضافه شدن سایدبار** برای دسترسی سریع‌تر به امکانات
+- **افزودن تم سایبورگ** با ترکیب رنگ سبز و تیره
+- **بهبود نمایش آیتم‌های دانلود** با افکت‌های هاور و رنگ‌بندی مناسب
+- **امکان تنظیم اندازه فونت** برای خوانایی بهتر
+- **نمایش آیکون‌های وضعیت** برای تشخیص سریع‌تر وضعیت دانلودها
+- **نمایش آمار دانلودها** در سایدبار
 
 </div>
 
@@ -124,9 +141,10 @@ ShetabDaryaft/
 
 <p align="center">
     <img src="https://img.shields.io/badge/Language-Python-blue" alt="Language" />
-    <img src="https://img.shields.io/badge/UI-ttkbootstrap-blueviolet" alt="UI" />
+    <img src="https://img.shields.io/badge/UI-Tkinter-blueviolet" alt="UI" />
     <img src="https://img.shields.io/badge/Platform-Windows-green" alt="Platform" />
     <img src="https://img.shields.io/badge/Language-Persian-orange" alt="Language" />
+    <img src="https://img.shields.io/badge/Version-1.0.1-red" alt="Version" />
 </p>
 
 ## 📝 Introduction
@@ -135,14 +153,21 @@ ShetabDaryaft/
 
 ## ✨ Features
 
-- **Modern and beautiful UI** with custom "Aqua" blue theme
+- **Modern and professional UI** with new design similar to popular download managers
+- **Dedicated sidebar** for quick access to application features
+- **Three beautiful themes**:
+  - **Aqua**: Custom blue theme
+  - **Dark**: Dark theme for night use
+  - **Cyborg**: Modern theme with green and dark colors
 - **Multi-threaded downloading** for increased download speed
-- **Fully Persian** with RTL support and Persian fonts
+- **Download statistics display** with distinctive coloring for each status
 - **Download management** (start, pause, resume, remove)
 - **Download information display** including speed, file size, and remaining time
+- **Colored progress bars** corresponding to each download status
+- **Status icons** for quick identification of download status
 - **Download history** for accessing previous downloads
-- **Custom save location** selection
-- **Persian date and time display** using Jalali calendar
+- **Font size selection** for better readability
+- **Download status display** in status bar
 
 ## 🖼️ Screenshots
 
@@ -175,15 +200,16 @@ python shetabdaryaft.py
 
 ## 📋 Usage
 
-1. **Add new download**: Click on the "Add Download +" button and enter the download URL.
-2. **Manage downloads**: Use the control buttons to manage downloads (pause, resume, delete).
-3. **Settings**: Change settings like save path and thread count through the settings menu.
-4. **History**: Access your previous downloads.
+1. **Add new download**: Click on the "New Download" button in the sidebar or from the File menu.
+2. **Manage downloads**: Select a download and use the control buttons in the toolbar to manage downloads.
+3. **Change theme**: You can change the application's visual theme to blue, dark, or cyborg through the settings menu.
+4. **Adjust font size**: For better readability, you can change the font size.
+5. **View download statistics**: See the number of active, paused, and completed downloads in the sidebar.
 
 ## 🔧 Technologies
 
 - **Python**: Main programming language
-- **ttkbootstrap**: For creating modern UI
+- **Tkinter**: For creating the user interface
 - **Requests**: For handling HTTP requests
 - **Threading**: For implementing multi-threaded downloads
 - **Pillow**: For managing images and icons
@@ -194,20 +220,28 @@ python shetabdaryaft.py
 ShetabDaryaft/
 ├── shetabdaryaft.py     # Main application file
 ├── requirements.txt     # Project dependencies
+├── config.json          # Application settings
+├── download_history.json # Download history
 ├── assets/              # Graphic files
 │   ├── logo.png
 │   └── icon.ico
+├── img/                 # Images
 ├── font/                # Persian fonts
 │   ├── BYekan+.ttf
 │   └── BYekan+ Bold.ttf
+├── temp/                # Temporary files
 └── README.md            # This file
 ```
 
 ## 🔄 Updates
 
 Last update: Spring 2025
-- Added custom Aqua theme
-- Improved Persian font rendering
-- Increased UI scaling and readability
+- **Redesigned user interface** inspired by modern download managers
+- **Added sidebar** for quicker access to features
+- **Added Cyborg theme** with a combination of green and dark colors
+- **Improved download item display** with hover effects and appropriate coloring
+- **Font size adjustment option** for better readability
+- **Status icons display** for faster status identification
+- **Download statistics display** in sidebar
 
 </div>
