@@ -796,6 +796,26 @@ class ShetabDaryaftApp:
                 "progress_fg": "#3498db",   # آبی برای نوار پیشرفت
                 "progress_bg": "#2c3e50"    # تیره برای پس‌زمینه نوار پیشرفت
             }
+        elif theme == "cyborg":
+            colors = {
+                "primary": "#212529",       # تیره برای هدر
+                "secondary": "#343a40",     # تیره‌تر برای المان‌های انتخابی
+                "accent": "#20c997",        # سبز برای تاکید
+                "bg": "#2b3035",            # خاکستری تیره برای پس‌زمینه
+                "text": "#f8f9fa",          # روشن برای متن
+                "button_bg": "#20c997",     # سبز برای دکمه‌ها
+                "button_fg": "#212529",     # تیره برای متن دکمه‌ها
+                "button_active": "#1b9e7e", # سبز تیره‌تر برای دکمه‌های فعال
+                "progress_fg": "#20c997",   # سبز برای نوار پیشرفت
+                "progress_bg": "#343a40",   # تیره برای پس‌زمینه نوار پیشرفت
+                "success": "#28a745",       # سبز برای تکمیل
+                "warning": "#ffc107",       # زرد برای هشدار
+                "danger": "#dc3545",        # قرمز برای خطا
+                "info": "#17a2b8",          # آبی برای اطلاعات
+                "header_bg": "#212529",     # تیره برای هدر
+                "list_item_bg": "#343a40",  # تیره‌تر برای آیتم‌های لیست
+                "list_item_hover": "#495057" # خاکستری روشن‌تر برای هاور
+            }
         else:
             # استفاده از رنگ‌های پیش‌فرض برای سایر تم‌ها
             colors = default_colors
@@ -957,162 +977,283 @@ class ShetabDaryaftApp:
     
     def _create_widgets(self):
         """ایجاد المان‌های رابط کاربری"""
-        # ایجاد منوی اصلی
-        menubar = tk.Menu(self.root)
-        self.root.config(menu=menubar)
+        # تنظیم حاشیه اصلی
+        self.root.configure(padx=0, pady=0)
         
-        # منوی فایل
-        file_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="فایل", menu=file_menu)
-        file_menu.add_command(label="دانلود جدید", command=self._show_new_download_dialog)
-        file_menu.add_separator()
-        file_menu.add_command(label="تنظیمات", command=self._show_settings_dialog)
-        file_menu.add_separator()
-        file_menu.add_command(label="خروج", command=self._on_close)
-        
-        # منوی راهنما
-        help_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="راهنما", menu=help_menu)
-        help_menu.add_command(label="درباره برنامه", command=self._show_about_dialog)
-        
-        # ایجاد فریم اصلی
+        # قاب اصلی
         self.main_frame = tk.Frame(self.root, bg=self.colors["bg"])
-        self.main_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        self.main_frame.pack(fill="both", expand=True)
         
-        # ایجاد هدر با رنگ گرادیانت
-        header_img = generate_gradient_image(800, 50, (0, 184, 212, 255), (3, 155, 229, 255))  # آبی فیروزه‌ای به آبی
-        self.header_img = ImageTk.PhotoImage(header_img)
+        # ایجاد هدر با طراحی مدرن
+        header_frame = tk.Frame(self.main_frame, bg=self.colors["primary"], height=60)
+        header_frame.pack(fill="x", pady=0, padx=0)
+        header_frame.pack_propagate(False)
         
-        header_label = tk.Label(self.main_frame, image=self.header_img, bd=0, highlightthickness=0)
-        header_label.pack(fill="x", pady=(0, 10))
+        # لوگو و عنوان در هدر
+        app_title = tk.Label(header_frame, text=f"{APP_NAME}", 
+                           font=self.font_big, bg=self.colors["primary"], 
+                           fg=self.colors["text"], padx=15)
+        app_title.pack(side="right", pady=10)
         
-        # افزودن متن و لوگو به هدر
-        title_label = tk.Label(header_label, text=APP_NAME, font=self.font_big, fg="white", bg=self.colors["primary"])
-        title_label.place(relx=0.5, rely=0.5, anchor="center")
+        # ساختار اصلی - ترکیب ساید بار و محتوا
+        content_frame = tk.PanedWindow(self.main_frame, orient=tk.HORIZONTAL, 
+                                    bg=self.colors["bg"], sashwidth=2,
+                                    sashrelief=tk.RIDGE)
+        content_frame.pack(fill="both", expand=True, padx=0, pady=0)
         
-        # ایجاد دکمه‌های اصلی
-        button_frame = tk.Frame(self.main_frame, bg=self.colors["bg"])
-        button_frame.pack(fill="x", pady=(0, 10))
+        # ساید بار در سمت راست
+        sidebar_frame = tk.Frame(content_frame, bg=self.colors["secondary"], width=200)
+        sidebar_frame.pack_propagate(False)
+        content_frame.add(sidebar_frame)
         
-        # ایجاد استایل دکمه‌ها
-        button_style = {"bg": self.colors["button_bg"], "fg": self.colors["button_fg"], 
-                        "activebackground": self.colors["button_active"], "activeforeground": self.colors["button_fg"],
-                        "font": self.font_normal, "bd": 1, "relief": tk.RAISED, "padx": 10, "pady": 5}
+        # پنل اصلی
+        main_panel = tk.Frame(content_frame, bg=self.colors["bg"])
+        content_frame.add(main_panel)
+        content_frame.paneconfigure(sidebar_frame, minsize=180)
         
-        self.new_download_btn = tk.Button(button_frame, text="دانلود جدید", command=self._show_new_download_dialog, **button_style)
-        self.new_download_btn.pack(side="right", padx=5)
+        # دکمه‌های منو در ساید بار
+        sidebar_title = tk.Label(sidebar_frame, text="منو", font=self.font_header,
+                              bg=self.colors["secondary"], fg=self.colors["text"],
+                              pady=10)
+        sidebar_title.pack(fill="x", padx=10)
         
-        # دکمه‌های کنترل دانلود
-        self.pause_btn = tk.Button(button_frame, text="توقف", command=self._pause_download, state="disabled", **button_style)
-        self.pause_btn.pack(side="right", padx=5)
+        # استایل دکمه‌های منو
+        menu_button_style = {
+            "bg": self.colors["secondary"],
+            "fg": self.colors["text"],
+            "activebackground": self.colors["accent"],
+            "activeforeground": self.colors["button_fg"],
+            "relief": tk.FLAT,
+            "borderwidth": 0,
+            "padx": 10,
+            "pady": 8,
+            "font": self.font_normal,
+            "anchor": "w",
+            "width": 20,
+            "cursor": "hand2"
+        }
         
-        self.resume_btn = tk.Button(button_frame, text="ادامه", command=self._resume_download, state="disabled", **button_style)
-        self.resume_btn.pack(side="right", padx=5)
+        # دکمه دانلود جدید
+        self.new_download_btn = tk.Button(sidebar_frame, text="⬇️ دانلود جدید", 
+                                      command=self._show_new_download_dialog,
+                                      **menu_button_style)
+        self.new_download_btn.pack(fill="x", pady=2)
         
-        self.cancel_btn = tk.Button(button_frame, text="لغو", command=self._cancel_download, state="disabled", **button_style)
-        self.cancel_btn.pack(side="right", padx=5)
+        # دکمه تنظیمات
+        settings_btn = tk.Button(sidebar_frame, text="⚙️ تنظیمات", 
+                               command=self._show_settings_dialog,
+                               **menu_button_style)
+        settings_btn.pack(fill="x", pady=2)
         
-        self.remove_btn = tk.Button(button_frame, text="حذف", command=self._remove_download, state="disabled", **button_style)
-        self.remove_btn.pack(side="right", padx=5)
+        # دکمه درباره
+        about_btn = tk.Button(sidebar_frame, text="ℹ️ درباره برنامه", 
+                           command=self._show_about_dialog,
+                           **menu_button_style)
+        about_btn.pack(fill="x", pady=2)
         
-        # ایجاد پنل اصلی با PanedWindow
-        paned_window = tk.PanedWindow(self.main_frame, orient=tk.VERTICAL, bg=self.colors["bg"], sashwidth=4, sashrelief=tk.RAISED)
-        paned_window.pack(fill="both", expand=True)
+        # فضای خالی
+        tk.Frame(sidebar_frame, height=20, bg=self.colors["secondary"]).pack(fill="x")
         
-        # بخش لیست دانلودها
-        self.downloads_frame = tk.Frame(paned_window, bg=self.colors["bg"])
-        paned_window.add(self.downloads_frame, height=400)
+        # بخش دانلودهای فعال
+        active_label = tk.Label(sidebar_frame, text="وضعیت دانلودها", font=self.font_bold,
+                              bg=self.colors["secondary"], fg=self.colors["text"],
+                              pady=5)
+        active_label.pack(fill="x", padx=10)
         
-        # عنوان لیست دانلودها
-        downloads_header = tk.Frame(self.downloads_frame, bg=self.colors["bg"])
-        downloads_header.pack(fill="x", padx=5, pady=5)
+        # ایجاد قاب برای نمایش خلاصه وضعیت
+        stats_frame = tk.Frame(sidebar_frame, bg=self.colors["secondary"], padx=10)
+        stats_frame.pack(fill="x", pady=5)
         
-        tk.Label(downloads_header, text="لیست دانلودها", font=self.font_header, bg=self.colors["bg"], fg=self.colors["text"]).pack(side="right")
+        # آمار دانلودها
+        self.active_count_label = tk.Label(stats_frame, text="در حال دانلود: 0", 
+                                       font=self.font_normal, 
+                                       bg=self.colors["secondary"], 
+                                       fg=self.colors["accent"],
+                                       anchor="w")
+        self.active_count_label.pack(fill="x", pady=2)
         
-        # تعداد دانلودها
-        self.download_count_label = tk.Label(downloads_header, text="تعداد: 0", bg=self.colors["bg"], fg=self.colors["text"])
-        self.download_count_label.pack(side="left")
+        self.completed_count_label = tk.Label(stats_frame, text="تکمیل شده: 0", 
+                                          font=self.font_normal, 
+                                          bg=self.colors["secondary"], 
+                                          fg=self.colors["success"],
+                                          anchor="w")
+        self.completed_count_label.pack(fill="x", pady=2)
         
-        # تنظیم اسکرول برای لیست دانلودها
-        self.downloads_canvas = tk.Canvas(self.downloads_frame, bg=self.colors["bg"], highlightthickness=0)
-        scrollbar = tk.Scrollbar(self.downloads_frame, orient="vertical", command=self.downloads_canvas.yview)
-        self.downloads_scrollable_frame = tk.Frame(self.downloads_canvas, bg=self.colors["bg"])
+        self.paused_count_label = tk.Label(stats_frame, text="متوقف شده: 0", 
+                                      font=self.font_normal, 
+                                      bg=self.colors["secondary"], 
+                                      fg=self.colors["warning"],
+                                      anchor="w")
+        self.paused_count_label.pack(fill="x", pady=2)
         
+        self.error_count_label = tk.Label(stats_frame, text="خطا: 0", 
+                                     font=self.font_normal, 
+                                     bg=self.colors["secondary"], 
+                                     fg=self.colors["danger"],
+                                     anchor="w")
+        self.error_count_label.pack(fill="x", pady=2)
+        
+        # در انتهای ساید بار، اطلاعات نسخه
+        version_label = tk.Label(sidebar_frame, text=f"نسخه {APP_VERSION}", 
+                              font=(self.font_normal[0], 8), 
+                              bg=self.colors["secondary"], 
+                              fg=self.colors["text"],
+                              pady=5)
+        version_label.pack(side="bottom", fill="x", pady=5)
+        
+        # پنل اصلی محتوا
+        content_container = tk.PanedWindow(main_panel, orient=tk.VERTICAL, 
+                                         bg=self.colors["bg"],
+                                         sashwidth=4, sashrelief=tk.SUNKEN)
+        content_container.pack(fill="both", expand=True, padx=10, pady=10)
+        
+        # نوار ابزار - دکمه‌های کنترل دانلود
+        toolbar_frame = tk.Frame(content_container, bg=self.colors["bg"], height=40)
+        toolbar_frame.pack_propagate(False)
+        content_container.add(toolbar_frame, height=40)
+        
+        # استایل دکمه‌های نوار ابزار
+        toolbar_btn_style = {
+            "bg": self.colors["button_bg"],
+            "fg": self.colors["button_fg"],
+            "activebackground": self.colors["button_active"],
+            "activeforeground": self.colors["button_fg"],
+            "font": self.font_normal,
+            "bd": 0,
+            "padx": 10,
+            "pady": 2,
+            "width": 8,
+            "cursor": "hand2"
+        }
+        
+        # دکمه‌های کنترل دانلود در نوار ابزار
+        self.resume_btn = tk.Button(toolbar_frame, text="▶ ادامه", command=self._resume_download, state="disabled", **toolbar_btn_style)
+        self.resume_btn.pack(side="right", padx=5, pady=5)
+        
+        self.pause_btn = tk.Button(toolbar_frame, text="⏸ توقف", command=self._pause_download, state="disabled", **toolbar_btn_style)
+        self.pause_btn.pack(side="right", padx=5, pady=5)
+        
+        self.cancel_btn = tk.Button(toolbar_frame, text="⏹ لغو", command=self._cancel_download, state="disabled", **toolbar_btn_style)
+        self.cancel_btn.pack(side="right", padx=5, pady=5)
+        
+        self.remove_btn = tk.Button(toolbar_frame, text="🗑 حذف", command=self._remove_download, state="disabled", **toolbar_btn_style)
+        self.remove_btn.pack(side="right", padx=5, pady=5)
+        
+        # نمایشگر تعداد دانلودها
+        self.download_count_label = tk.Label(toolbar_frame, text="تعداد دانلودها: 0", 
+                                        font=self.font_normal, bg=self.colors["bg"],
+                                        fg=self.colors["text"])
+        self.download_count_label.pack(side="left", padx=5, pady=5)
+        
+        # فریم لیست دانلودها
+        downloads_frame = tk.Frame(content_container, bg=self.colors["bg"], bd=1, relief=tk.SOLID)
+        content_container.add(downloads_frame)
+        
+        # فریم جزئیات
+        details_frame = tk.LabelFrame(content_container, text="جزئیات دانلود", 
+                                   font=self.font_bold, bg=self.colors["bg"],
+                                   fg=self.colors["text"], height=150, pady=5)
+        content_container.add(details_frame, height=150)
+        details_frame.pack_propagate(False)
+        
+        # ایجاد اسکرول برای لیست دانلود‌ها
+        downloads_canvas = tk.Canvas(downloads_frame, bg=self.colors["bg"], highlightthickness=0)
+        scrollbar = ttk.Scrollbar(downloads_frame, orient="vertical", command=downloads_canvas.yview)
+        
+        self.downloads_scrollable_frame = tk.Frame(downloads_canvas, bg=self.colors["bg"])
         self.downloads_scrollable_frame.bind(
             "<Configure>",
-            lambda e: self.downloads_canvas.configure(scrollregion=self.downloads_canvas.bbox("all"))
+            lambda e: downloads_canvas.configure(scrollregion=downloads_canvas.bbox("all"))
         )
         
-        self.downloads_canvas.create_window((0, 0), window=self.downloads_scrollable_frame, anchor="nw")
-        self.downloads_canvas.configure(yscrollcommand=scrollbar.set)
+        downloads_canvas.create_window((0, 0), window=self.downloads_scrollable_frame, anchor="nw", width=content_container.winfo_reqwidth()-20)
+        downloads_canvas.configure(yscrollcommand=scrollbar.set)
         
-        self.downloads_canvas.pack(side="left", fill="both", expand=True)
+        # تغییر اندازه بوم با تغییر اندازه پنجره
+        content_container.bind("<Configure>", lambda e: downloads_canvas.configure(width=e.width-25))
+        
+        downloads_canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
         
         # بخش جزئیات دانلود
-        self.details_frame = tk.LabelFrame(paned_window, text="جزئیات دانلود", bg=self.colors["bg"], fg=self.colors["text"], font=self.font_normal)
-        paned_window.add(self.details_frame, height=200)
+        details_inner_frame = tk.Frame(details_frame, bg=self.colors["bg"], padx=10, pady=5)
+        details_inner_frame.pack(fill="both", expand=True)
         
-        details_inner_frame = tk.Frame(self.details_frame, bg=self.colors["bg"])
-        details_inner_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        # گرید جزئیات
+        details_grid = tk.Frame(details_inner_frame, bg=self.colors["bg"])
+        details_grid.pack(fill="both", expand=True)
         
-        # اطلاعات جزئیات دانلود
-        label_style = {"bg": self.colors["bg"], "fg": self.colors["text"], "font": self.font_normal}
+        # استایل برچسب‌های اطلاعات
+        info_label_style = {"bg": self.colors["bg"], "fg": self.colors["text"], 
+                         "font": self.font_normal, "pady": 2, "anchor": "e"}
+        info_value_style = {"bg": self.colors["bg"], "fg": self.colors["accent"], 
+                         "font": self.font_normal, "pady": 2, "anchor": "w"}
         
-        tk.Label(details_inner_frame, text="نام فایل:", **label_style).grid(row=0, column=1, sticky="e", padx=5, pady=2)
-        self.detail_filename = tk.Label(details_inner_frame, text="-", **label_style)
-        self.detail_filename.grid(row=0, column=0, sticky="w", padx=5, pady=2)
+        # ردیف اول
+        tk.Label(details_grid, text="نام فایل:", **info_label_style).grid(row=0, column=3, sticky="e", padx=5)
+        self.detail_filename = tk.Label(details_grid, text="-", **info_value_style)
+        self.detail_filename.grid(row=0, column=2, sticky="w", padx=5)
         
-        tk.Label(details_inner_frame, text="آدرس دانلود:", **label_style).grid(row=1, column=1, sticky="e", padx=5, pady=2)
-        self.detail_url = tk.Label(details_inner_frame, text="-", **label_style)
-        self.detail_url.grid(row=1, column=0, sticky="w", padx=5, pady=2)
+        tk.Label(details_grid, text="وضعیت:", **info_label_style).grid(row=0, column=1, sticky="e", padx=5)
+        self.detail_status = tk.Label(details_grid, text="-", **info_value_style)
+        self.detail_status.grid(row=0, column=0, sticky="w", padx=5)
         
-        tk.Label(details_inner_frame, text="مسیر ذخیره:", **label_style).grid(row=2, column=1, sticky="e", padx=5, pady=2)
-        self.detail_save_path = tk.Label(details_inner_frame, text="-", **label_style)
-        self.detail_save_path.grid(row=2, column=0, sticky="w", padx=5, pady=2)
+        # ردیف دوم
+        tk.Label(details_grid, text="مسیر ذخیره:", **info_label_style).grid(row=1, column=3, sticky="e", padx=5)
+        self.detail_save_path = tk.Label(details_grid, text="-", **info_value_style)
+        self.detail_save_path.grid(row=1, column=2, sticky="w", padx=5)
         
-        tk.Label(details_inner_frame, text="وضعیت:", **label_style).grid(row=3, column=1, sticky="e", padx=5, pady=2)
-        self.detail_status = tk.Label(details_inner_frame, text="-", **label_style)
-        self.detail_status.grid(row=3, column=0, sticky="w", padx=5, pady=2)
+        tk.Label(details_grid, text="سایز:", **info_label_style).grid(row=1, column=1, sticky="e", padx=5)
+        self.detail_size = tk.Label(details_grid, text="-", **info_value_style)
+        self.detail_size.grid(row=1, column=0, sticky="w", padx=5)
         
-        tk.Label(details_inner_frame, text="سایز:", **label_style).grid(row=4, column=1, sticky="e", padx=5, pady=2)
-        self.detail_size = tk.Label(details_inner_frame, text="-", **label_style)
-        self.detail_size.grid(row=4, column=0, sticky="w", padx=5, pady=2)
+        # ردیف سوم
+        tk.Label(details_grid, text="لینک:", **info_label_style).grid(row=2, column=3, sticky="e", padx=5)
+        self.detail_url = tk.Label(details_grid, text="-", **info_value_style)
+        self.detail_url.grid(row=2, column=2, sticky="w", padx=5)
         
-        tk.Label(details_inner_frame, text="دانلود شده:", **label_style).grid(row=5, column=1, sticky="e", padx=5, pady=2)
-        self.detail_downloaded = tk.Label(details_inner_frame, text="-", **label_style)
-        self.detail_downloaded.grid(row=5, column=0, sticky="w", padx=5, pady=2)
+        tk.Label(details_grid, text="سرعت:", **info_label_style).grid(row=2, column=1, sticky="e", padx=5)
+        self.detail_speed = tk.Label(details_grid, text="-", **info_value_style)
+        self.detail_speed.grid(row=2, column=0, sticky="w", padx=5)
         
-        tk.Label(details_inner_frame, text="سرعت:", **label_style).grid(row=6, column=1, sticky="e", padx=5, pady=2)
-        self.detail_speed = tk.Label(details_inner_frame, text="-", **label_style)
-        self.detail_speed.grid(row=6, column=0, sticky="w", padx=5, pady=2)
+        # ردیف چهارم
+        tk.Label(details_grid, text="دریافت شده:", **info_label_style).grid(row=3, column=3, sticky="e", padx=5)
+        self.detail_downloaded = tk.Label(details_grid, text="-", **info_value_style)
+        self.detail_downloaded.grid(row=3, column=2, sticky="w", padx=5)
         
-        tk.Label(details_inner_frame, text="زمان باقیمانده:", **label_style).grid(row=7, column=1, sticky="e", padx=5, pady=2)
-        self.detail_eta = tk.Label(details_inner_frame, text="-", **label_style)
-        self.detail_eta.grid(row=7, column=0, sticky="w", padx=5, pady=2)
+        tk.Label(details_grid, text="زمان باقیمانده:", **info_label_style).grid(row=3, column=1, sticky="e", padx=5)
+        self.detail_eta = tk.Label(details_grid, text="-", **info_value_style)
+        self.detail_eta.grid(row=3, column=0, sticky="w", padx=5)
         
-        tk.Label(details_inner_frame, text="زمان سپری شده:", **label_style).grid(row=8, column=1, sticky="e", padx=5, pady=2)
-        self.detail_elapsed = tk.Label(details_inner_frame, text="-", **label_style)
-        self.detail_elapsed.grid(row=8, column=0, sticky="w", padx=5, pady=2)
+        # تنظیم وزن ستون‌ها
+        for i in range(4):
+            details_grid.columnconfigure(i, weight=1)
         
-        # تنظیم جهت‌گیری راست به چپ
-        for child in details_inner_frame.winfo_children():
+        # فوتر وضعیت
+        footer_frame = tk.Frame(self.main_frame, bg=self.colors["primary"], height=25)
+        footer_frame.pack(fill="x", side="bottom", pady=0)
+        footer_frame.pack_propagate(False)
+        
+        # نمایش اطلاعات وضعیت در فوتر
+        self.status_label = tk.Label(footer_frame, text="آماده برای دانلود", 
+                                 bg=self.colors["primary"], 
+                                 fg=self.colors["text"],
+                                 font=(self.font_normal[0], 9))
+        self.status_label.pack(side="right", padx=10)
+        
+        # ذخیره مرجع به لیست دانلودها برای به‌روزرسانی
+        self.download_items_ui = {}
+        
+        # تنظیم اولیه
+        self._update_download_items()
+        
+        # تنظیم RTL برای همه المان‌ها
+        for child in details_grid.winfo_children():
             if isinstance(child, tk.Label):
                 child.configure(justify="right")
-        
-        # فوتر با رنگ گرادیانت
-        footer_img = generate_gradient_image(800, 30, (3, 155, 229, 255), (0, 184, 212, 255))  # آبی به آبی فیروزه‌ای
-        self.footer_img = ImageTk.PhotoImage(footer_img)
-        
-        footer_label = tk.Label(self.main_frame, image=self.footer_img, bd=0, highlightthickness=0)
-        footer_label.pack(fill="x", pady=(10, 0))
-        
-        # افزودن متن کپی‌رایت به فوتر
-        copyright_label = tk.Label(footer_label, text=f"{APP_NAME} {APP_VERSION} - {datetime.datetime.now().year}", fg="white", bg=self.colors["primary"])
-        copyright_label.place(relx=0.5, rely=0.5, anchor="center")
-        
-        # به‌روزرسانی اولیه لیست دانلودها
-        self._update_download_items()
+                
+        # تابع برای بروزرسانی آمار دانلود‌ها
+        self._update_download_stats()
     
     def _load_config(self):
         """بارگذاری تنظیمات از فایل"""
