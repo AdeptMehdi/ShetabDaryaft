@@ -976,66 +976,67 @@ class ShetabDaryaftApp:
         help_menu.add_command(label="درباره برنامه", command=self._show_about_dialog)
         
         # ایجاد فریم اصلی
-        self.main_frame = ttk.Frame(self.root)
+        self.main_frame = tk.Frame(self.root, bg=self.colors["bg"])
         self.main_frame.pack(fill="both", expand=True, padx=10, pady=10)
         
-        # ایجاد هدر با رنگ گرادیانت تم Aqua
-        if self.config.get("theme") == "aqua":
-            # رنگ گرادیانت هدر برای تم Aqua
-            header_img = generate_gradient_image(800, 50, (0, 184, 212, 255), (3, 155, 229, 255))  # آبی فیروزه‌ای به آبی
-        else:
-            header_img = generate_gradient_image(800, 50, (100, 180, 230, 255), (150, 200, 230, 255))
+        # ایجاد هدر با رنگ گرادیانت
+        header_img = generate_gradient_image(800, 50, (0, 184, 212, 255), (3, 155, 229, 255))  # آبی فیروزه‌ای به آبی
         self.header_img = ImageTk.PhotoImage(header_img)
         
-        header_label = ttk.Label(self.main_frame, image=self.header_img)
+        header_label = tk.Label(self.main_frame, image=self.header_img, bd=0, highlightthickness=0)
         header_label.pack(fill="x", pady=(0, 10))
         
         # افزودن متن و لوگو به هدر
-        title_label = ttk.Label(header_label, text=APP_NAME, font=self.font_big, foreground="white")
+        title_label = tk.Label(header_label, text=APP_NAME, font=self.font_big, fg="white", bg=self.colors["primary"])
         title_label.place(relx=0.5, rely=0.5, anchor="center")
         
         # ایجاد دکمه‌های اصلی
-        button_frame = ttk.Frame(self.main_frame)
+        button_frame = tk.Frame(self.main_frame, bg=self.colors["bg"])
         button_frame.pack(fill="x", pady=(0, 10))
         
-        self.new_download_btn = ttk.Button(button_frame, text="دانلود جدید", command=self._show_new_download_dialog)
+        # ایجاد استایل دکمه‌ها
+        button_style = {"bg": self.colors["button_bg"], "fg": self.colors["button_fg"], 
+                        "activebackground": self.colors["button_active"], "activeforeground": self.colors["button_fg"],
+                        "font": self.font_normal, "bd": 1, "relief": tk.RAISED, "padx": 10, "pady": 5}
+        
+        self.new_download_btn = tk.Button(button_frame, text="دانلود جدید", command=self._show_new_download_dialog, **button_style)
         self.new_download_btn.pack(side="right", padx=5)
         
         # دکمه‌های کنترل دانلود
-        self.pause_btn = ttk.Button(button_frame, text="توقف", command=self._pause_download, state="disabled")
+        self.pause_btn = tk.Button(button_frame, text="توقف", command=self._pause_download, state="disabled", **button_style)
         self.pause_btn.pack(side="right", padx=5)
         
-        self.resume_btn = ttk.Button(button_frame, text="ادامه", command=self._resume_download, state="disabled")
+        self.resume_btn = tk.Button(button_frame, text="ادامه", command=self._resume_download, state="disabled", **button_style)
         self.resume_btn.pack(side="right", padx=5)
         
-        self.cancel_btn = ttk.Button(button_frame, text="لغو", command=self._cancel_download, state="disabled")
+        self.cancel_btn = tk.Button(button_frame, text="لغو", command=self._cancel_download, state="disabled", **button_style)
         self.cancel_btn.pack(side="right", padx=5)
         
-        self.remove_btn = ttk.Button(button_frame, text="حذف", command=self._remove_download, state="disabled")
+        self.remove_btn = tk.Button(button_frame, text="حذف", command=self._remove_download, state="disabled", **button_style)
         self.remove_btn.pack(side="right", padx=5)
         
-        # ایجاد لیست دانلودها
-        paned_window = ttk.PanedWindow(self.main_frame, orient="vertical")
+        # ایجاد پنل اصلی با PanedWindow
+        paned_window = tk.PanedWindow(self.main_frame, orient=tk.VERTICAL, bg=self.colors["bg"], sashwidth=4, sashrelief=tk.RAISED)
         paned_window.pack(fill="both", expand=True)
         
         # بخش لیست دانلودها
-        self.downloads_frame = ttk.Frame(paned_window)
-        paned_window.add(self.downloads_frame, weight=3)
+        self.downloads_frame = tk.Frame(paned_window, bg=self.colors["bg"])
+        paned_window.add(self.downloads_frame, height=400)
         
         # عنوان لیست دانلودها
-        downloads_header = ttk.Frame(self.downloads_frame)
+        downloads_header = tk.Frame(self.downloads_frame, bg=self.colors["bg"])
         downloads_header.pack(fill="x", padx=5, pady=5)
         
-        ttk.Label(downloads_header, text="لیست دانلودها", font=self.font_header).pack(side="right")
+        tk.Label(downloads_header, text="لیست دانلودها", font=self.font_header, bg=self.colors["bg"], fg=self.colors["text"]).pack(side="right")
         
         # تعداد دانلودها
-        self.download_count_label = ttk.Label(downloads_header, text="تعداد: 0")
+        self.download_count_label = tk.Label(downloads_header, text="تعداد: 0", bg=self.colors["bg"], fg=self.colors["text"])
         self.download_count_label.pack(side="left")
         
         # تنظیم اسکرول برای لیست دانلودها
-        self.downloads_canvas = tk.Canvas(self.downloads_frame)
-        scrollbar = ttk.Scrollbar(self.downloads_frame, orient="vertical", command=self.downloads_canvas.yview)
-        self.downloads_scrollable_frame = ttk.Frame(self.downloads_canvas)
+        self.downloads_canvas = tk.Canvas(self.downloads_frame, bg=self.colors["bg"], highlightthickness=0)
+        scrollbar = tk.Scrollbar(self.downloads_frame, orient="vertical", command=self.downloads_canvas.yview)
+        self.downloads_scrollable_frame = tk.Frame(self.downloads_canvas, bg=self.colors["bg"])
         
         self.downloads_scrollable_frame.bind(
             "<Configure>",
@@ -1049,66 +1050,65 @@ class ShetabDaryaftApp:
         scrollbar.pack(side="right", fill="y")
         
         # بخش جزئیات دانلود
-        self.details_frame = ttk.LabelFrame(paned_window, text="جزئیات دانلود")
-        paned_window.add(self.details_frame, weight=1)
+        self.details_frame = tk.LabelFrame(paned_window, text="جزئیات دانلود", bg=self.colors["bg"], fg=self.colors["text"], font=self.font_normal)
+        paned_window.add(self.details_frame, height=200)
         
-        details_inner_frame = ttk.Frame(self.details_frame)
+        details_inner_frame = tk.Frame(self.details_frame, bg=self.colors["bg"])
         details_inner_frame.pack(fill="both", expand=True, padx=10, pady=10)
         
         # اطلاعات جزئیات دانلود
-        ttk.Label(details_inner_frame, text="نام فایل:").grid(row=0, column=1, sticky="e", padx=5, pady=2)
-        self.detail_filename = ttk.Label(details_inner_frame, text="-")
+        label_style = {"bg": self.colors["bg"], "fg": self.colors["text"], "font": self.font_normal}
+        
+        tk.Label(details_inner_frame, text="نام فایل:", **label_style).grid(row=0, column=1, sticky="e", padx=5, pady=2)
+        self.detail_filename = tk.Label(details_inner_frame, text="-", **label_style)
         self.detail_filename.grid(row=0, column=0, sticky="w", padx=5, pady=2)
         
-        ttk.Label(details_inner_frame, text="آدرس دانلود:").grid(row=1, column=1, sticky="e", padx=5, pady=2)
-        self.detail_url = ttk.Label(details_inner_frame, text="-")
+        tk.Label(details_inner_frame, text="آدرس دانلود:", **label_style).grid(row=1, column=1, sticky="e", padx=5, pady=2)
+        self.detail_url = tk.Label(details_inner_frame, text="-", **label_style)
         self.detail_url.grid(row=1, column=0, sticky="w", padx=5, pady=2)
         
-        ttk.Label(details_inner_frame, text="مسیر ذخیره:").grid(row=2, column=1, sticky="e", padx=5, pady=2)
-        self.detail_save_path = ttk.Label(details_inner_frame, text="-")
+        tk.Label(details_inner_frame, text="مسیر ذخیره:", **label_style).grid(row=2, column=1, sticky="e", padx=5, pady=2)
+        self.detail_save_path = tk.Label(details_inner_frame, text="-", **label_style)
         self.detail_save_path.grid(row=2, column=0, sticky="w", padx=5, pady=2)
         
-        ttk.Label(details_inner_frame, text="وضعیت:").grid(row=3, column=1, sticky="e", padx=5, pady=2)
-        self.detail_status = ttk.Label(details_inner_frame, text="-")
+        tk.Label(details_inner_frame, text="وضعیت:", **label_style).grid(row=3, column=1, sticky="e", padx=5, pady=2)
+        self.detail_status = tk.Label(details_inner_frame, text="-", **label_style)
         self.detail_status.grid(row=3, column=0, sticky="w", padx=5, pady=2)
         
-        ttk.Label(details_inner_frame, text="سایز:").grid(row=4, column=1, sticky="e", padx=5, pady=2)
-        self.detail_size = ttk.Label(details_inner_frame, text="-")
+        tk.Label(details_inner_frame, text="سایز:", **label_style).grid(row=4, column=1, sticky="e", padx=5, pady=2)
+        self.detail_size = tk.Label(details_inner_frame, text="-", **label_style)
         self.detail_size.grid(row=4, column=0, sticky="w", padx=5, pady=2)
         
-        ttk.Label(details_inner_frame, text="دانلود شده:").grid(row=5, column=1, sticky="e", padx=5, pady=2)
-        self.detail_downloaded = ttk.Label(details_inner_frame, text="-")
+        tk.Label(details_inner_frame, text="دانلود شده:", **label_style).grid(row=5, column=1, sticky="e", padx=5, pady=2)
+        self.detail_downloaded = tk.Label(details_inner_frame, text="-", **label_style)
         self.detail_downloaded.grid(row=5, column=0, sticky="w", padx=5, pady=2)
         
-        ttk.Label(details_inner_frame, text="سرعت:").grid(row=6, column=1, sticky="e", padx=5, pady=2)
-        self.detail_speed = ttk.Label(details_inner_frame, text="-")
+        tk.Label(details_inner_frame, text="سرعت:", **label_style).grid(row=6, column=1, sticky="e", padx=5, pady=2)
+        self.detail_speed = tk.Label(details_inner_frame, text="-", **label_style)
         self.detail_speed.grid(row=6, column=0, sticky="w", padx=5, pady=2)
         
-        ttk.Label(details_inner_frame, text="زمان باقیمانده:").grid(row=7, column=1, sticky="e", padx=5, pady=2)
-        self.detail_eta = ttk.Label(details_inner_frame, text="-")
+        tk.Label(details_inner_frame, text="زمان باقیمانده:", **label_style).grid(row=7, column=1, sticky="e", padx=5, pady=2)
+        self.detail_eta = tk.Label(details_inner_frame, text="-", **label_style)
         self.detail_eta.grid(row=7, column=0, sticky="w", padx=5, pady=2)
         
-        ttk.Label(details_inner_frame, text="زمان سپری شده:").grid(row=8, column=1, sticky="e", padx=5, pady=2)
-        self.detail_elapsed = ttk.Label(details_inner_frame, text="-")
+        tk.Label(details_inner_frame, text="زمان سپری شده:", **label_style).grid(row=8, column=1, sticky="e", padx=5, pady=2)
+        self.detail_elapsed = tk.Label(details_inner_frame, text="-", **label_style)
         self.detail_elapsed.grid(row=8, column=0, sticky="w", padx=5, pady=2)
         
         # تنظیم جهت‌گیری راست به چپ
         for child in details_inner_frame.winfo_children():
-            child.configure(justify="right")
+            if isinstance(child, tk.Label):
+                child.configure(justify="right")
         
-        # فوتر با رنگ گرادیانت تم Aqua
-        if self.config.get("theme") == "aqua":
-            # رنگ گرادیانت فوتر برای تم Aqua
-            footer_img = generate_gradient_image(800, 30, (3, 155, 229, 255), (0, 184, 212, 255))  # آبی به آبی فیروزه‌ای
-        else:
-            footer_img = generate_gradient_image(800, 30, (150, 200, 230, 255), (100, 180, 230, 255))
+        # فوتر با رنگ گرادیانت
+        footer_img = generate_gradient_image(800, 30, (3, 155, 229, 255), (0, 184, 212, 255))  # آبی به آبی فیروزه‌ای
         self.footer_img = ImageTk.PhotoImage(footer_img)
         
-        footer_label = ttk.Label(self.main_frame, image=self.footer_img)
+        footer_label = tk.Label(self.main_frame, image=self.footer_img, bd=0, highlightthickness=0)
         footer_label.pack(fill="x", pady=(10, 0))
         
         # افزودن متن کپی‌رایت به فوتر
-        copyright_label = ttk.Label(footer_label, text=f"{APP_NAME} {APP_VERSION} - {datetime.datetime.now().year}", foreground="white")
+        copyright_label = tk.Label(footer_label, text=f"{APP_NAME} {APP_VERSION} - {datetime.datetime.now().year}", fg="white", bg=self.colors["primary"])
         copyright_label.place(relx=0.5, rely=0.5, anchor="center")
         
         # به‌روزرسانی اولیه لیست دانلودها
@@ -1173,31 +1173,34 @@ class ShetabDaryaftApp:
         row = 0
         for item in downloads:
             if item.id not in self.download_items_ui:
-                frame = ttk.Frame(self.downloads_scrollable_frame)
+                frame = tk.Frame(self.downloads_scrollable_frame, bg=self.colors["bg"], bd=1, relief=tk.GROOVE)
                 frame.grid(row=row, column=0, sticky="ew", padx=5, pady=5)
                 
                 # فریم بالایی
-                top_frame = ttk.Frame(frame)
+                top_frame = tk.Frame(frame, bg=self.colors["bg"])
                 top_frame.pack(fill="x", pady=(0, 2))
                 
                 # نام فایل
-                filename_label = ttk.Label(top_frame, text=item.filename, font=self.font_bold)
+                filename_label = tk.Label(top_frame, text=item.filename, font=self.font_bold, 
+                                        bg=self.colors["bg"], fg=self.colors["text"])
                 filename_label.pack(side="right")
                 
                 # وضعیت
-                status_label = ttk.Label(top_frame, text=self._get_status_text(item.status))
+                status_label = tk.Label(top_frame, text=self._get_status_text(item.status), 
+                                       bg=self.colors["bg"], fg=self.colors["text"])
                 status_label.pack(side="left")
                 
                 # فریم پایینی
-                bottom_frame = ttk.Frame(frame)
+                bottom_frame = tk.Frame(frame, bg=self.colors["bg"])
                 bottom_frame.pack(fill="x", pady=(2, 0))
                 
-                # نوار پیشرفت
+                # نوار پیشرفت - استفاده از ttk.Progressbar چون Tkinter استاندارد نوار پیشرفت ندارد
                 progress_bar = ttk.Progressbar(bottom_frame, value=item.progress, length=400)
                 progress_bar.pack(side="right", padx=(0, 5))
                 
                 # اطلاعات اضافی
-                info_label = ttk.Label(bottom_frame, text=self._get_download_info_text(item))
+                info_label = tk.Label(bottom_frame, text=self._get_download_info_text(item), 
+                                     bg=self.colors["bg"], fg=self.colors["text"])
                 info_label.pack(side="left")
                 
                 # افزودن رویداد کلیک برای انتخاب دانلود
@@ -1215,7 +1218,8 @@ class ShetabDaryaftApp:
                     'filename_label': filename_label,
                     'status_label': status_label,
                     'progress_bar': progress_bar,
-                    'info_label': info_label
+                    'info_label': info_label,
+                    'frame': frame
                 }
                 
                 row += 1
@@ -1363,54 +1367,66 @@ class ShetabDaryaftApp:
         dialog.resizable(False, False)
         dialog.transient(self.root)
         dialog.grab_set()
+        dialog.configure(bg=self.colors["bg"])
         
         # تنظیم فونت و جهت متن
         for child in dialog.winfo_children():
             child.configure(font=("BYekan+", 10))
         
         # فریم اصلی
-        main_frame = ttk.Frame(dialog, padding=10)
+        main_frame = tk.Frame(dialog, bg=self.colors["bg"], padx=10, pady=10)
         main_frame.pack(fill="both", expand=True)
         
         # لیبل‌ها و ورودی‌ها
-        ttk.Label(main_frame, text="آدرس دانلود:").grid(row=0, column=1, sticky="e", padx=5, pady=5)
+        label_style = {"bg": self.colors["bg"], "fg": self.colors["text"], "font": self.font_normal}
+        entry_style = {"bg": "white", "fg": self.colors["text"], "font": self.font_normal, "relief": tk.SUNKEN, "bd": 1}
+        
+        tk.Label(main_frame, text="آدرس دانلود:", **label_style).grid(row=0, column=1, sticky="e", padx=5, pady=5)
         url_var = tk.StringVar()
-        url_entry = ttk.Entry(main_frame, textvariable=url_var, width=50)
+        url_entry = tk.Entry(main_frame, textvariable=url_var, width=50, **entry_style)
         url_entry.grid(row=0, column=0, sticky="w", padx=5, pady=5)
         url_entry.focus()
         
-        ttk.Label(main_frame, text="مسیر ذخیره:").grid(row=1, column=1, sticky="e", padx=5, pady=5)
+        tk.Label(main_frame, text="مسیر ذخیره:", **label_style).grid(row=1, column=1, sticky="e", padx=5, pady=5)
         save_path_var = tk.StringVar(value=self.config.get("default_download_path"))
-        save_path_frame = ttk.Frame(main_frame)
+        save_path_frame = tk.Frame(main_frame, bg=self.colors["bg"])
         save_path_frame.grid(row=1, column=0, sticky="w", padx=5, pady=5)
         
-        save_path_entry = ttk.Entry(save_path_frame, textvariable=save_path_var, width=40)
+        save_path_entry = tk.Entry(save_path_frame, textvariable=save_path_var, width=40, **entry_style)
         save_path_entry.pack(side="left")
         
-        browse_btn = ttk.Button(save_path_frame, text="انتخاب", command=lambda: self._browse_directory(save_path_var))
+        browse_btn = tk.Button(save_path_frame, text="انتخاب", command=lambda: self._browse_directory(save_path_var),
+                              bg=self.colors["button_bg"], fg=self.colors["button_fg"], 
+                              activebackground=self.colors["button_active"], font=self.font_normal)
         browse_btn.pack(side="right", padx=5)
         
-        ttk.Label(main_frame, text="نام فایل (اختیاری):").grid(row=2, column=1, sticky="e", padx=5, pady=5)
+        tk.Label(main_frame, text="نام فایل (اختیاری):", **label_style).grid(row=2, column=1, sticky="e", padx=5, pady=5)
         filename_var = tk.StringVar()
-        filename_entry = ttk.Entry(main_frame, textvariable=filename_var, width=50)
+        filename_entry = tk.Entry(main_frame, textvariable=filename_var, width=50, **entry_style)
         filename_entry.grid(row=2, column=0, sticky="w", padx=5, pady=5)
         
         # فریم دکمه‌ها
-        button_frame = ttk.Frame(main_frame)
+        button_frame = tk.Frame(main_frame, bg=self.colors["bg"])
         button_frame.grid(row=3, column=0, columnspan=2, pady=10)
         
+        # استایل دکمه‌ها
+        button_style = {"bg": self.colors["button_bg"], "fg": self.colors["button_fg"], 
+                       "activebackground": self.colors["button_active"], "font": self.font_normal,
+                       "relief": tk.RAISED, "bd": 1, "padx": 10, "pady": 5}
+        
         # دکمه انصراف
-        cancel_btn = ttk.Button(button_frame, text="انصراف", command=dialog.destroy)
+        cancel_btn = tk.Button(button_frame, text="انصراف", command=dialog.destroy, **button_style)
         cancel_btn.pack(side="left", padx=5)
         
         # دکمه دانلود
-        download_btn = ttk.Button(button_frame, text="شروع دانلود", 
-                                 command=lambda: self._start_new_download(url_var.get(), save_path_var.get(), filename_var.get(), dialog))
+        download_btn = tk.Button(button_frame, text="شروع دانلود", 
+                               command=lambda: self._start_new_download(url_var.get(), save_path_var.get(), filename_var.get(), dialog),
+                               **button_style)
         download_btn.pack(side="right", padx=5)
         
         # تنظیم جهت‌گیری راست به چپ
         for child in main_frame.winfo_children():
-            if isinstance(child, ttk.Label):
+            if isinstance(child, tk.Label):
                 child.configure(justify="right")
         
         # برای فشردن دکمه Enter
@@ -1466,82 +1482,96 @@ class ShetabDaryaftApp:
         dialog.resizable(True, True)
         dialog.transient(self.root)
         dialog.grab_set()
+        dialog.configure(bg=self.colors["bg"])
         
         # فریم اصلی
-        main_frame = ttk.Frame(dialog, padding=10)
+        main_frame = tk.Frame(dialog, bg=self.colors["bg"], padx=10, pady=10)
         main_frame.pack(fill="both", expand=True)
         
+        # استایل‌های مشترک
+        label_style = {"bg": self.colors["bg"], "fg": self.colors["text"], "font": self.font_normal}
+        entry_style = {"bg": "white", "fg": self.colors["text"], "font": self.font_normal, "relief": tk.SUNKEN, "bd": 1}
+        button_style = {"bg": self.colors["button_bg"], "fg": self.colors["button_fg"], 
+                       "activebackground": self.colors["button_active"], "font": self.font_normal,
+                       "relief": tk.RAISED, "bd": 1, "padx": 10, "pady": 5}
+        
         # تنظیمات دانلود
-        download_frame = ttk.LabelFrame(main_frame, text="تنظیمات دانلود", padding=15)
+        download_frame = tk.LabelFrame(main_frame, text="تنظیمات دانلود", bg=self.colors["bg"], 
+                                     fg=self.colors["text"], font=self.font_normal, padx=15, pady=15)
         download_frame.pack(fill="x", pady=10, padx=10, ipady=5)
         
         # مسیر پیش‌فرض دانلود
-        ttk.Label(download_frame, text="مسیر پیش‌فرض دانلود:").grid(row=0, column=1, sticky="e", padx=10, pady=8)
+        tk.Label(download_frame, text="مسیر پیش‌فرض دانلود:", **label_style).grid(row=0, column=1, sticky="e", padx=10, pady=8)
         default_path_var = tk.StringVar(value=self.config.get("default_download_path"))
-        default_path_frame = ttk.Frame(download_frame)
+        default_path_frame = tk.Frame(download_frame, bg=self.colors["bg"])
         default_path_frame.grid(row=0, column=0, sticky="w", padx=10, pady=8)
         
-        default_path_entry = ttk.Entry(default_path_frame, textvariable=default_path_var, width=40)
+        default_path_entry = tk.Entry(default_path_frame, textvariable=default_path_var, width=40, **entry_style)
         default_path_entry.pack(side="left")
         
-        browse_btn = ttk.Button(default_path_frame, text="انتخاب", command=lambda: self._browse_directory(default_path_var))
+        browse_btn = tk.Button(default_path_frame, text="انتخاب", command=lambda: self._browse_directory(default_path_var), **button_style)
         browse_btn.pack(side="right", padx=5)
         
         # تعداد دانلود همزمان
-        ttk.Label(download_frame, text="تعداد دانلود همزمان:").grid(row=1, column=1, sticky="e", padx=5, pady=2)
+        tk.Label(download_frame, text="تعداد دانلود همزمان:", **label_style).grid(row=1, column=1, sticky="e", padx=5, pady=2)
         concurrent_downloads_var = tk.IntVar(value=self.config.get("max_concurrent_downloads", 3))
-        concurrent_downloads_spinbox = ttk.Spinbox(download_frame, from_=1, to=10, textvariable=concurrent_downloads_var, width=5)
+        concurrent_downloads_spinbox = tk.Spinbox(download_frame, from_=1, to=10, textvariable=concurrent_downloads_var, width=5, **entry_style)
         concurrent_downloads_spinbox.grid(row=1, column=0, sticky="w", padx=5, pady=2)
         
         # تعداد نخ‌های هر دانلود
-        ttk.Label(download_frame, text="تعداد نخ‌های هر دانلود:").grid(row=2, column=1, sticky="e", padx=5, pady=2)
+        tk.Label(download_frame, text="تعداد نخ‌های هر دانلود:", **label_style).grid(row=2, column=1, sticky="e", padx=5, pady=2)
         threads_per_download_var = tk.IntVar(value=self.config.get("max_threads_per_download", 5))
-        threads_per_download_spinbox = ttk.Spinbox(download_frame, from_=1, to=16, textvariable=threads_per_download_var, width=5)
+        threads_per_download_spinbox = tk.Spinbox(download_frame, from_=1, to=16, textvariable=threads_per_download_var, width=5, **entry_style)
         threads_per_download_spinbox.grid(row=2, column=0, sticky="w", padx=5, pady=2)
         
         # استفاده از دانلود چندنخی
         multithreaded_var = tk.BooleanVar(value=self.config.get("use_multithreaded_download", True))
-        multithreaded_check = ttk.Checkbutton(download_frame, text="استفاده از دانلود چندنخی", variable=multithreaded_var)
+        multithreaded_check = tk.Checkbutton(download_frame, text="استفاده از دانلود چندنخی", variable=multithreaded_var,
+                                           bg=self.colors["bg"], fg=self.colors["text"], font=self.font_normal,
+                                           activebackground=self.colors["bg"], selectcolor=self.colors["bg"])
         multithreaded_check.grid(row=3, column=0, columnspan=2, sticky="w", padx=5, pady=2)
         
         # تنظیمات رابط کاربری
-        ui_frame = ttk.LabelFrame(main_frame, text="تنظیمات رابط کاربری", padding=15)
+        ui_frame = tk.LabelFrame(main_frame, text="تنظیمات رابط کاربری", bg=self.colors["bg"], 
+                               fg=self.colors["text"], font=self.font_normal, padx=15, pady=15)
         ui_frame.pack(fill="x", pady=10, padx=10, ipady=5)
         
         # تم برنامه
-        ttk.Label(ui_frame, text="تم برنامه:").grid(row=0, column=1, sticky="e", padx=10, pady=8)
-        themes = ["aqua", "vapor", "flatly", "superhero", "darkly", "solar", "cyborg"]
+        tk.Label(ui_frame, text="تم برنامه:", **label_style).grid(row=0, column=1, sticky="e", padx=10, pady=8)
+        themes = ["aqua", "dark", "light"]
         theme_var = tk.StringVar(value=self.config.get("theme", "aqua"))
         theme_combobox = ttk.Combobox(ui_frame, textvariable=theme_var, values=themes, width=20, state="readonly")
         theme_combobox.grid(row=0, column=0, sticky="w", padx=10, pady=8)
         
         # شروع خودکار دانلود
         auto_start_var = tk.BooleanVar(value=self.config.get("auto_start_download", True))
-        auto_start_check = ttk.Checkbutton(ui_frame, text="شروع خودکار دانلود", variable=auto_start_var)
+        auto_start_check = tk.Checkbutton(ui_frame, text="شروع خودکار دانلود", variable=auto_start_var,
+                                         bg=self.colors["bg"], fg=self.colors["text"], font=self.font_normal,
+                                         activebackground=self.colors["bg"], selectcolor=self.colors["bg"])
         auto_start_check.grid(row=1, column=0, columnspan=2, sticky="w", padx=5, pady=2)
         
         # دکمه‌ها
-        button_frame = ttk.Frame(main_frame)
+        button_frame = tk.Frame(main_frame, bg=self.colors["bg"])
         button_frame.pack(fill="x", pady=15)
         
-        cancel_btn = ttk.Button(button_frame, text="انصراف", command=dialog.destroy, width=15)
+        cancel_btn = tk.Button(button_frame, text="انصراف", command=dialog.destroy, width=15, **button_style)
         cancel_btn.pack(side="left", padx=15)
         
-        save_btn = ttk.Button(button_frame, text="ذخیره", width=15, 
-                             command=lambda: self._save_settings(
-                                 default_path_var.get(),
-                                 concurrent_downloads_var.get(),
-                                 threads_per_download_var.get(),
-                                 multithreaded_var.get(),
-                                 theme_var.get(),
-                                 auto_start_var.get(),
-                                 dialog
-                             ))
+        save_btn = tk.Button(button_frame, text="ذخیره", width=15, **button_style,
+                           command=lambda: self._save_settings(
+                               default_path_var.get(),
+                               concurrent_downloads_var.get(),
+                               threads_per_download_var.get(),
+                               multithreaded_var.get(),
+                               theme_var.get(),
+                               auto_start_var.get(),
+                               dialog
+                           ))
         save_btn.pack(side="right", padx=5)
         
         # تنظیم جهت‌گیری راست به چپ
         for child in download_frame.winfo_children() + ui_frame.winfo_children():
-            if isinstance(child, ttk.Label):
+            if isinstance(child, tk.Label):
                 child.configure(justify="right")
         
         dialog.bind("<Return>", lambda e: save_btn.invoke())
