@@ -1095,7 +1095,7 @@ class ShetabDaryaftApp:
         
         # در انتهای ساید بار، اطلاعات نسخه
         version_label = tk.Label(sidebar_frame, text=f"نسخه {APP_VERSION}", 
-                              font=(self.font_normal[0], 8), 
+                              font=(self.font_normal["family"], 8), 
                               bg=self.colors["secondary"], 
                               fg=self.colors["text"],
                               pady=5)
@@ -1261,7 +1261,7 @@ class ShetabDaryaftApp:
         self.status_label = tk.Label(footer_frame, text="آماده برای دانلود", 
                                  bg=self.colors["primary"], 
                                  fg=self.colors["text"],
-                                 font=(self.font_normal[0], 9))
+                                 font=(self.font_normal["family"], 9))
         self.status_label.pack(side="right", padx=10)
         
         # ذخیره مرجع به لیست دانلودها برای به‌روزرسانی
