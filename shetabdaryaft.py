@@ -1616,17 +1616,20 @@ class ShetabDaryaftApp:
         dialog.resizable(False, False)
         dialog.transient(self.root)
         dialog.grab_set()
+        dialog.configure(bg=self.colors["bg"])
         
         # فریم اصلی
-        main_frame = ttk.Frame(dialog, padding=10)
+        main_frame = tk.Frame(dialog, bg=self.colors["bg"], padx=10, pady=10)
         main_frame.pack(fill="both", expand=True)
         
         # عنوان برنامه
-        title_label = ttk.Label(main_frame, text=APP_NAME, font=self.font_big)
+        title_label = tk.Label(main_frame, text=APP_NAME, font=self.font_big, 
+                              bg=self.colors["bg"], fg=self.colors["text"])
         title_label.pack(pady=10)
         
         # نسخه
-        version_label = ttk.Label(main_frame, text=f"نسخه {APP_VERSION}")
+        version_label = tk.Label(main_frame, text=f"نسخه {APP_VERSION}", 
+                               bg=self.colors["bg"], fg=self.colors["text"])
         version_label.pack()
         
         # توضیحات
@@ -1640,14 +1643,14 @@ class ShetabDaryaftApp:
 - نمایش سرعت و پیشرفت دانلود
 - تنظیمات سفارشی برای بهینه‌سازی"""
         
-        desc_frame = ttk.Frame(main_frame)
+        desc_frame = tk.Frame(main_frame, bg=self.colors["bg"])
         desc_frame.pack(fill="both", expand=True, pady=10)
         
-        desc_scrollbar = ttk.Scrollbar(desc_frame)
+        desc_scrollbar = tk.Scrollbar(desc_frame)
         desc_scrollbar.pack(side="right", fill="y")
         
         desc_text_widget = tk.Text(desc_frame, wrap="word", height=8, font=("BYekan+", 9), 
-                                  yscrollcommand=desc_scrollbar.set)
+                                 yscrollcommand=desc_scrollbar.set, bg="white", fg=self.colors["text"])
         desc_text_widget.pack(side="left", fill="both", expand=True)
         desc_scrollbar.config(command=desc_text_widget.yview)
         
@@ -1655,11 +1658,16 @@ class ShetabDaryaftApp:
         desc_text_widget.config(state="disabled")
         
         # کپی‌رایت
-        copyright_label = ttk.Label(main_frame, text=f"© {datetime.datetime.now().year} - تمامی حقوق محفوظ است.")
+        copyright_label = tk.Label(main_frame, text=f"© {datetime.datetime.now().year} - تمامی حقوق محفوظ است.",
+                                 bg=self.colors["bg"], fg=self.colors["text"])
         copyright_label.pack(pady=5)
         
         # دکمه بستن
-        close_btn = ttk.Button(main_frame, text="بستن", command=dialog.destroy)
+        button_style = {"bg": self.colors["button_bg"], "fg": self.colors["button_fg"], 
+                       "activebackground": self.colors["button_active"], "font": self.font_normal,
+                       "relief": tk.RAISED, "bd": 1, "padx": 10, "pady": 5}
+        
+        close_btn = tk.Button(main_frame, text="بستن", command=dialog.destroy, **button_style)
         close_btn.pack(pady=5)
         
         dialog.bind("<Escape>", lambda e: dialog.destroy())
