@@ -1567,11 +1567,37 @@ class ShetabDaryaftApp:
         self.detail_filename.config(text=item.filename)
         self.detail_url.config(text=item.url)
         self.detail_save_path.config(text=item.save_path)
-        self.detail_status.config(text=self._get_status_text(item.status))
+        
+        # نمایش وضعیت با رنگ و آیکون
+        status_color = self._get_status_color(item.status)
+        status_text = self._get_status_text(item.status)
+        status_icon = self._get_status_icon(item.status)
+        self.detail_status.config(text=f"{status_icon} {status_text}", fg=status_color)
+        
+        # سایز فایل
         self.detail_size.config(text=format_size(item.size))
-        self.detail_downloaded.config(text=f"{format_size(item.downloaded)} ({item.progress:.1f}%)")
-        self.detail_speed.config(text=format_speed(item.speed) if item.status == "downloading" else "-")
-        self.detail_eta.config(text=format_time(item.estimated_time()) if item.status == "downloading" else "-")
+        
+        # میزان دانلود شده با درصد
+        if item.size > 0:
+            percent = item.progress
+            downloaded_text = f"{format_size(item.downloaded)} ({percent:.1f}%)"
+        else:
+            downloaded_text = format_size(item.downloaded)
+        self.detail_downloaded.config(text=downloaded_text)
+        
+        # سرعت دانلود
+        if item.status == "downloading":
+            self.detail_speed.config(text=format_speed(item.speed))
+        else:
+            self.detail_speed.config(text="-")
+        
+        # زمان باقیمانده
+        if item.status == "downloading" and item.estimated_time() is not None:
+            self.detail_eta.config(text=format_time(item.estimated_time()))
+        else:
+            self.detail_eta.config(text="-")
+        
+        # زمان سپری شده
         self.detail_elapsed.config(text=format_time(item.elapsed_time()))
         
         # به‌روزرسانی دکمه‌ها
@@ -1807,135 +1833,249 @@ class ShetabDaryaftApp:
     
     def _show_settings_dialog(self):
         """نمایش دیالوگ تنظیمات"""
+        # ایجاد پنجره تنظیمات
         dialog = tk.Toplevel(self.root)
         dialog.title("تنظیمات")
-        dialog.geometry("600x500")
-        dialog.resizable(True, True)
-        dialog.transient(self.root)
-        dialog.grab_set()
+        dialog.resizable(False, False)
+        dialog.grab_set()  # مدال کردن پنجره
+        dialog.focus_set()
+        
+        # تنظیم استایل و رنگ‌ها
         dialog.configure(bg=self.colors["bg"])
         
-        # فریم اصلی
-        main_frame = tk.Frame(dialog, bg=self.colors["bg"], padx=10, pady=10)
+        # مرکزی کردن پنجره روی پنجره اصلی
+        x = self.root.winfo_x() + (self.root.winfo_width() // 2) - (450 // 2)
+        y = self.root.winfo_y() + (self.root.winfo_height() // 2) - (500 // 2)
+        dialog.geometry(f"450x500+{x}+{y}")
+        
+        # قاب اصلی
+        main_frame = tk.Frame(dialog, bg=self.colors["bg"], padx=20, pady=20)
         main_frame.pack(fill="both", expand=True)
         
-        # استایل‌های مشترک
-        label_style = {"bg": self.colors["bg"], "fg": self.colors["text"], "font": self.font_normal}
-        entry_style = {"bg": "white", "fg": self.colors["text"], "font": self.font_normal, "relief": tk.SUNKEN, "bd": 1}
-        button_style = {"bg": self.colors["button_bg"], "fg": self.colors["button_fg"], 
-                       "activebackground": self.colors["button_active"], "font": self.font_normal,
-                       "relief": tk.RAISED, "bd": 1, "padx": 10, "pady": 5}
+        # سربرگ
+        title_label = tk.Label(main_frame, text="تنظیمات برنامه", 
+                             font=self.font_header, 
+                             bg=self.colors["bg"], 
+                             fg=self.colors["text"])
+        title_label.pack(pady=(0, 20))
         
-        # تنظیمات دانلود
-        download_frame = tk.LabelFrame(main_frame, text="تنظیمات دانلود", bg=self.colors["bg"], 
-                                     fg=self.colors["text"], font=self.font_normal, padx=15, pady=15)
-        download_frame.pack(fill="x", pady=10, padx=10, ipady=5)
+        # فریم مسیر پیش‌فرض دانلود
+        path_frame = tk.LabelFrame(main_frame, text="مسیر پیش‌فرض دانلود", 
+                                 bg=self.colors["bg"], 
+                                 fg=self.colors["text"],
+                                 font=self.font_bold,
+                                 padx=10, pady=10)
+        path_frame.pack(fill="x", pady=10)
         
         # مسیر پیش‌فرض دانلود
-        tk.Label(download_frame, text="مسیر پیش‌فرض دانلود:", **label_style).grid(row=0, column=1, sticky="e", padx=10, pady=8)
-        default_path_var = tk.StringVar(value=self.config.get("default_download_path"))
-        default_path_frame = tk.Frame(download_frame, bg=self.colors["bg"])
-        default_path_frame.grid(row=0, column=0, sticky="w", padx=10, pady=8)
+        default_path = tk.StringVar(value=self.config.get("default_download_path", ""))
         
-        default_path_entry = tk.Entry(default_path_frame, textvariable=default_path_var, width=40, **entry_style)
-        default_path_entry.pack(side="left")
+        path_entry = tk.Entry(path_frame, textvariable=default_path, width=30, 
+                           font=self.font_normal)
+        path_entry.pack(side="right", padx=(0, 5), pady=5, fill="x", expand=True)
         
-        browse_btn = tk.Button(default_path_frame, text="انتخاب", command=lambda: self._browse_directory(default_path_var), **button_style)
-        browse_btn.pack(side="right", padx=5)
+        browse_btn = tk.Button(path_frame, text="انتخاب", 
+                             command=lambda: self._browse_directory(default_path),
+                             bg=self.colors["button_bg"], 
+                             fg=self.colors["button_fg"],
+                             font=self.font_normal)
+        browse_btn.pack(side="left", padx=5, pady=5)
         
-        # تعداد دانلود همزمان
-        tk.Label(download_frame, text="تعداد دانلود همزمان:", **label_style).grid(row=1, column=1, sticky="e", padx=5, pady=2)
-        concurrent_downloads_var = tk.IntVar(value=self.config.get("max_concurrent_downloads", 3))
-        concurrent_downloads_spinbox = tk.Spinbox(download_frame, from_=1, to=10, textvariable=concurrent_downloads_var, width=5, **entry_style)
-        concurrent_downloads_spinbox.grid(row=1, column=0, sticky="w", padx=5, pady=2)
+        # فریم تنظیمات دانلود
+        download_frame = tk.LabelFrame(main_frame, text="تنظیمات دانلود", 
+                                     bg=self.colors["bg"], 
+                                     fg=self.colors["text"],
+                                     font=self.font_bold,
+                                     padx=10, pady=10)
+        download_frame.pack(fill="x", pady=10)
+        
+        # گرید تنظیمات دانلود
+        dl_grid = tk.Frame(download_frame, bg=self.colors["bg"])
+        dl_grid.pack(fill="x", pady=5)
+        
+        # تعداد دانلودهای همزمان
+        tk.Label(dl_grid, text="تعداد دانلودهای همزمان:", 
+              bg=self.colors["bg"], fg=self.colors["text"],
+              font=self.font_normal).grid(row=0, column=1, sticky="e", padx=5, pady=5)
+        
+        concurrent_downloads = tk.StringVar(value=str(self.config.get("max_concurrent_downloads", 3)))
+        concurrent_entry = tk.Spinbox(dl_grid, from_=1, to=20, 
+                                   textvariable=concurrent_downloads, 
+                                   width=5, font=self.font_normal)
+        concurrent_entry.grid(row=0, column=0, sticky="w", padx=5, pady=5)
         
         # تعداد نخ‌های هر دانلود
-        tk.Label(download_frame, text="تعداد نخ‌های هر دانلود:", **label_style).grid(row=2, column=1, sticky="e", padx=5, pady=2)
-        threads_per_download_var = tk.IntVar(value=self.config.get("max_threads_per_download", 5))
-        threads_per_download_spinbox = tk.Spinbox(download_frame, from_=1, to=16, textvariable=threads_per_download_var, width=5, **entry_style)
-        threads_per_download_spinbox.grid(row=2, column=0, sticky="w", padx=5, pady=2)
+        tk.Label(dl_grid, text="تعداد نخ‌های هر دانلود:", 
+              bg=self.colors["bg"], fg=self.colors["text"],
+              font=self.font_normal).grid(row=1, column=1, sticky="e", padx=5, pady=5)
+        
+        threads_per_download = tk.StringVar(value=str(self.config.get("max_threads_per_download", 5)))
+        threads_entry = tk.Spinbox(dl_grid, from_=1, to=16, 
+                                textvariable=threads_per_download, 
+                                width=5, font=self.font_normal)
+        threads_entry.grid(row=1, column=0, sticky="w", padx=5, pady=5)
         
         # استفاده از دانلود چندنخی
-        multithreaded_var = tk.BooleanVar(value=self.config.get("use_multithreaded_download", True))
-        multithreaded_check = tk.Checkbutton(download_frame, text="استفاده از دانلود چندنخی", variable=multithreaded_var,
-                                           bg=self.colors["bg"], fg=self.colors["text"], font=self.font_normal,
-                                           activebackground=self.colors["bg"], selectcolor=self.colors["bg"])
-        multithreaded_check.grid(row=3, column=0, columnspan=2, sticky="w", padx=5, pady=2)
-        
-        # تنظیمات رابط کاربری
-        ui_frame = tk.LabelFrame(main_frame, text="تنظیمات رابط کاربری", bg=self.colors["bg"], 
-                               fg=self.colors["text"], font=self.font_normal, padx=15, pady=15)
-        ui_frame.pack(fill="x", pady=10, padx=10, ipady=5)
-        
-        # تم برنامه
-        tk.Label(ui_frame, text="تم برنامه:", **label_style).grid(row=0, column=1, sticky="e", padx=10, pady=8)
-        themes = ["aqua", "dark", "light"]
-        theme_var = tk.StringVar(value=self.config.get("theme", "aqua"))
-        theme_combobox = ttk.Combobox(ui_frame, textvariable=theme_var, values=themes, width=20, state="readonly")
-        theme_combobox.grid(row=0, column=0, sticky="w", padx=10, pady=8)
+        multithreaded = tk.BooleanVar(value=self.config.get("use_multithreaded_download", True))
+        multi_check = tk.Checkbutton(download_frame, text="استفاده از دانلود چندنخی", 
+                                   variable=multithreaded, 
+                                   bg=self.colors["bg"], 
+                                   fg=self.colors["text"],
+                                   selectcolor=self.colors["bg"],
+                                   font=self.font_normal)
+        multi_check.pack(anchor="w", pady=5)
         
         # شروع خودکار دانلود
-        auto_start_var = tk.BooleanVar(value=self.config.get("auto_start_download", True))
-        auto_start_check = tk.Checkbutton(ui_frame, text="شروع خودکار دانلود", variable=auto_start_var,
-                                         bg=self.colors["bg"], fg=self.colors["text"], font=self.font_normal,
-                                         activebackground=self.colors["bg"], selectcolor=self.colors["bg"])
-        auto_start_check.grid(row=1, column=0, columnspan=2, sticky="w", padx=5, pady=2)
+        auto_start = tk.BooleanVar(value=self.config.get("auto_start_download", True))
+        auto_check = tk.Checkbutton(download_frame, text="شروع خودکار دانلود‌ها", 
+                                  variable=auto_start, 
+                                  bg=self.colors["bg"], 
+                                  fg=self.colors["text"],
+                                  selectcolor=self.colors["bg"],
+                                  font=self.font_normal)
+        auto_check.pack(anchor="w", pady=5)
         
-        # دکمه‌ها
-        button_frame = tk.Frame(main_frame, bg=self.colors["bg"])
-        button_frame.pack(fill="x", pady=15)
+        # فریم تنظیمات ظاهری
+        appearance_frame = tk.LabelFrame(main_frame, text="تنظیمات ظاهری", 
+                                      bg=self.colors["bg"], 
+                                      fg=self.colors["text"],
+                                      font=self.font_bold,
+                                      padx=10, pady=10)
+        appearance_frame.pack(fill="x", pady=10)
         
-        cancel_btn = tk.Button(button_frame, text="انصراف", command=dialog.destroy, width=15, **button_style)
-        cancel_btn.pack(side="left", padx=15)
+        # گرید تنظیمات ظاهری
+        app_grid = tk.Frame(appearance_frame, bg=self.colors["bg"])
+        app_grid.pack(fill="x", pady=5)
         
-        save_btn = tk.Button(button_frame, text="ذخیره", width=15, **button_style,
-                           command=lambda: self._save_settings(
-                               default_path_var.get(),
-                               concurrent_downloads_var.get(),
-                               threads_per_download_var.get(),
-                               multithreaded_var.get(),
-                               theme_var.get(),
-                               auto_start_var.get(),
-                               dialog
-                           ))
-        save_btn.pack(side="right", padx=5)
+        # انتخاب تم
+        tk.Label(app_grid, text="تم برنامه:", 
+              bg=self.colors["bg"], fg=self.colors["text"],
+              font=self.font_normal).grid(row=0, column=1, sticky="e", padx=5, pady=5)
         
-        # تنظیم جهت‌گیری راست به چپ
-        for child in download_frame.winfo_children() + ui_frame.winfo_children():
-            if isinstance(child, tk.Label):
-                child.configure(justify="right")
+        theme_options = ["aqua", "dark", "cyborg"]
+        theme = tk.StringVar(value=self.config.get("theme", "aqua"))
+        theme_combo = ttk.Combobox(app_grid, textvariable=theme, 
+                                values=theme_options, 
+                                width=15, font=self.font_normal)
+        theme_combo.grid(row=0, column=0, sticky="w", padx=5, pady=5)
         
-        dialog.bind("<Return>", lambda e: save_btn.invoke())
-        dialog.bind("<Escape>", lambda e: dialog.destroy())
+        # اندازه فونت
+        tk.Label(app_grid, text="اندازه فونت:", 
+              bg=self.colors["bg"], fg=self.colors["text"],
+              font=self.font_normal).grid(row=1, column=1, sticky="e", padx=5, pady=5)
+        
+        font_size = tk.StringVar(value=str(self.config.get("font_size", 14)))
+        font_size_entry = tk.Spinbox(app_grid, from_=8, to=20, 
+                                  textvariable=font_size, 
+                                  width=5, font=self.font_normal)
+        font_size_entry.grid(row=1, column=0, sticky="w", padx=5, pady=5)
+        
+        # نمایش در تری
+        tray_icon = tk.BooleanVar(value=self.config.get("tray_icon_enabled", True))
+        tray_check = tk.Checkbutton(appearance_frame, text="نمایش آیکون در سیستم تری", 
+                                 variable=tray_icon, 
+                                 bg=self.colors["bg"], 
+                                 fg=self.colors["text"],
+                                 selectcolor=self.colors["bg"],
+                                 font=self.font_normal)
+        tray_check.pack(anchor="w", pady=5)
+        
+        # دکمه‌های ذخیره/انصراف
+        button_frame = tk.Frame(main_frame, bg=self.colors["bg"], pady=10)
+        button_frame.pack(fill="x")
+        
+        button_style = {
+            "font": self.font_normal,
+            "padx": 15,
+            "pady": 5
+        }
+        
+        save_btn = tk.Button(button_frame, text="ذخیره تنظیمات", 
+                          command=lambda: self._save_settings(
+                              default_path.get(),
+                              concurrent_downloads.get(),
+                              threads_per_download.get(),
+                              multithreaded.get(),
+                              theme.get(),
+                              auto_start.get(),
+                              font_size.get(),
+                              tray_icon.get(),
+                              dialog
+                          ),
+                          bg=self.colors["button_bg"], 
+                          fg=self.colors["button_fg"],
+                          **button_style)
+        save_btn.pack(side="left", padx=5)
+        
+        cancel_btn = tk.Button(button_frame, text="انصراف", 
+                            command=dialog.destroy,
+                            bg=self.colors["bg"], 
+                            fg=self.colors["text"],
+                            **button_style)
+        cancel_btn.pack(side="right", padx=5)
+        
+        # مرکزی کردن دیالوگ
+        dialog.update_idletasks()
+        width = dialog.winfo_width()
+        height = dialog.winfo_height()
+        x = (self.root.winfo_width() // 2) - (width // 2) + self.root.winfo_x()
+        y = (self.root.winfo_height() // 2) - (height // 2) + self.root.winfo_y()
+        dialog.geometry(f"{width}x{height}+{x}+{y}")
     
-    def _save_settings(self, default_path, concurrent_downloads, threads_per_download, multithreaded, theme, auto_start, dialog):
+    def _save_settings(self, default_path, concurrent_downloads, threads_per_download, multithreaded, theme, auto_start, font_size, tray_icon, dialog):
         """ذخیره تنظیمات جدید"""
         try:
-            # اعتبارسنجی تنظیمات
-            if not os.path.isdir(default_path):
-                messagebox.showerror("خطا", "مسیر پیش‌فرض نامعتبر است.")
-                return
+            # بررسی صحت ورودی‌ها
+            concurrent_downloads = int(concurrent_downloads)
+            threads_per_download = int(threads_per_download)
+            font_size = int(font_size)
             
-            # ذخیره تنظیمات جدید
+            # بررسی محدودیت‌ها
+            if concurrent_downloads < 1:
+                concurrent_downloads = 1
+            elif concurrent_downloads > 20:
+                concurrent_downloads = 20
+                
+            if threads_per_download < 1:
+                threads_per_download = 1
+            elif threads_per_download > 16:
+                threads_per_download = 16
+                
+            if font_size < 8:
+                font_size = 8
+            elif font_size > 20:
+                font_size = 20
+                
+            # به‌روزرسانی تنظیمات
             self.config["default_download_path"] = default_path
             self.config["max_concurrent_downloads"] = concurrent_downloads
             self.config["max_threads_per_download"] = threads_per_download
             self.config["use_multithreaded_download"] = multithreaded
             self.config["theme"] = theme
             self.config["auto_start_download"] = auto_start
+            self.config["font_size"] = font_size
+            self.config["tray_icon_enabled"] = tray_icon
             
-            self._save_config(self.config)
+            # ذخیره تنظیمات
+            saved = self._save_config(self.config)
             
-            # بستن دیالوگ
-            dialog.destroy()
-            
-            # استفاده از تم جدید
-            if theme != self.style.theme.name:
-                # تغییر تم
-                self.style = Style(theme=theme)
-            
-            # پیام موفقیت
-            messagebox.showinfo("اطلاعیه", "تنظیمات با موفقیت ذخیره شدند.")
+            if saved:
+                messagebox.showinfo("ذخیره تنظیمات", "تنظیمات با موفقیت ذخیره شد.\nبرخی تنظیمات پس از راه‌اندازی مجدد برنامه اعمال می‌شوند.")
+                
+                # بررسی تغییر تم
+                old_theme = self.colors["theme"] if "theme" in self.colors else "aqua"
+                if old_theme != theme:
+                    # اعمال تم جدید
+                    self.colors = self._setup_colors()
+                    self._setup_styles()
+                    messagebox.showinfo("تغییر تم", "برای اعمال کامل تم جدید، لطفاً برنامه را مجدد راه‌اندازی کنید.")
+                
+                dialog.destroy()
+            else:
+                messagebox.showerror("خطا", "خطا در ذخیره‌سازی تنظیمات")
+                
+        except ValueError:
+            messagebox.showerror("خطا", "لطفاً مقادیر عددی صحیح وارد کنید")
         except Exception as e:
             messagebox.showerror("خطا", f"خطا در ذخیره تنظیمات: {str(e)}")
     
